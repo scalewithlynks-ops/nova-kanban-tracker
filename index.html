@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Work Tracker v3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #0a0a0a; }
+        .task-card { transition: all 0.2s ease; }
+        .task-card:hover { transform: translateY(-2px); }
+        .task-card.dragging { opacity: 0.5; transform: rotate(3deg); }
+        .column.drag-over { background: rgba(14, 165, 233, 0.1); border: 2px dashed #0ea5e9; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: #1a1a1a; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .overdue { border: 2px solid #ef4444 !important; animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); } }
+        .sidebar-open { transform: translateX(0); }
+        .sidebar-closed { transform: translateX(100%); }
+        .mood-btn { transition: all 0.15s; }
+        .mood-btn:hover { transform: scale(1.2); }
+        .mood-btn.active { transform: scale(1.3); filter: drop-shadow(0 0 8px rgba(14, 165, 233, 0.6)); }
+        .reflection-panel { transition: max-height 0.3s ease; overflow: hidden; }
+        .reflection-panel.collapsed { max-height: 48px; }
+        .reflection-panel.expanded { max-height: 600px; }
+        @media (max-width: 768px) {
+            .mobile-column { display: none; }
+            .mobile-column.active { display: block; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-100">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
+        <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-sm mx-4">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-white mb-2">🔐 Nova Work Tracker</h1>
+                <p class="text-zinc-500 text-sm">v3.0</p>
+            </div>
+            <input type="password" id="passwordInput" placeholder="Enter password" 
+                class="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500 mb-4">
+            <button onclick="attemptLogin()" class="w-full py-3 bg-sky-500 hover:bg-sky-600 rounded-lg font-medium transition">
+                Unlock
+            </button>
+            <p id="loginError" class="text-red-500 text-sm text-center mt-3 hidden">Incorrect password</p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="bg-zinc-900/80 backdrop-blur border-b border-zinc-800 sticky top-0 z-40">
+            <div class="max-w-full mx-auto px-4 py-3">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-xl font-bold">⚡ Nova Work Tracker</h1>
+                        <span id="currentMood" class="text-xl cursor-pointer" onclick="toggleMoodPicker()" title="Set mood">😊</span>
+                        <div id="moodPicker" class="hidden absolute top-14 left-4 bg-zinc-800 border border-zinc-700 rounded-lg p-2 flex gap-1 z-50">
+                            <button class="mood-btn text-xl p-1" onclick="setMood('😊')">😊</button>
+                            <button class="mood-btn text-xl p-1" onclick="setMood('😐')">😐</button>
+                            <button class="mood-btn text-xl p-1" onclick="setMood('😔')">😔</button>
+                            <button class="mood-btn text-xl p-1" onclick="setMood('🔥')">🔥</button>
+                            <button class="mood-btn text-xl p-1" onclick="setMood('😤')">😤</button>
+                            <button class="mood-btn text-xl p-1" onclick="setMood('🤔')">🤔</button>
+                        </div>
+                        <span class="text-xs text-zinc-500 hidden sm:inline">v3.0</span>
+                    </div>
+                    
+                    <!-- Search -->
+                    <div class="flex-1 max-w-md">
+                        <input type="text" id="searchInput" placeholder="Search tasks... (press /)" 
+                            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-sky-500">
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <button onclick="openModal()" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                            <span>+</span> <span class="hidden sm:inline">New Task</span>
+                        </button>
+                        <button onclick="toggleSidebar()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition" title="Completed Tasks">
+                            ✓
+                        </button>
+                        <button onclick="showSettings()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">
+                            ⚙️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Cost & Time Tracker -->
+        <div class="bg-zinc-900/50 border-b border-zinc-800 px-4 py-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-4">
+                    <!-- Budget Section -->
+                    <div class="flex items-center gap-4">
+                        <span class="text-sm text-zinc-400">Budget:</span>
+                        <span class="text-lg font-bold text-white">$<span id="weeklyBudget">150</span></span>
+                        <span class="text-sm text-zinc-400">Spent:</span>
+                        <input type="number" id="currentSpend" step="0.01" 
+                            class="w-20 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-right font-bold focus:outline-none focus:border-sky-500 text-sm"
+                            onchange="updateBudgetDisplay()">
+                        <span class="text-sm text-zinc-400">Left:</span>
+                        <span id="budgetRemaining" class="font-bold text-emerald-400">$0</span>
+                    </div>
+                    <!-- Time Section -->
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-zinc-400">Today:</span>
+                            <input type="number" id="hoursToday" step="0.5" min="0" 
+                                class="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-right font-bold focus:outline-none focus:border-sky-500 text-sm"
+                                onchange="updateTimeMetrics()">
+                            <span class="text-xs text-zinc-500">hrs</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-zinc-400">Week:</span>
+                            <span id="hoursWeek" class="font-bold text-cyan-400">0</span>
+                            <span class="text-xs text-zinc-500">hrs</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-zinc-400">Saved:</span>
+                            <input type="number" id="timeSaved" step="0.5" min="0" 
+                                class="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-right font-bold text-emerald-400 focus:outline-none focus:border-sky-500 text-sm"
+                                onchange="updateTimeMetrics()">
+                            <span class="text-xs text-zinc-500">hrs</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div id="budgetBar" class="h-full transition-all duration-500 rounded-full bg-emerald-500" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between mt-1 text-xs text-zinc-500">
+                    <span>Week of <span id="weekStart"></span></span>
+                    <span id="budgetPercent">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="bg-zinc-900/30 border-b border-zinc-800 px-4 py-3">
+            <div class="max-w-4xl mx-auto flex items-center justify-center gap-6 sm:gap-12 text-center flex-wrap">
+                <div>
+                    <div id="statWeek" class="text-2xl font-bold text-sky-400">0</div>
+                    <div class="text-xs text-zinc-500">This Week</div>
+                </div>
+                <div>
+                    <div id="statTotal" class="text-2xl font-bold text-emerald-400">0</div>
+                    <div class="text-xs text-zinc-500">All Time</div>
+                </div>
+                <div>
+                    <div id="statAvgDays" class="text-2xl font-bold text-amber-400">0</div>
+                    <div class="text-xs text-zinc-500">Avg Days</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="px-4 py-3 border-b border-zinc-800 flex items-center gap-4 overflow-x-auto">
+            <select id="filterCategory" onchange="renderBoard()" class="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none">
+                <option value="">All Categories</option>
+                <option value="Build">Build</option>
+                <option value="LYNKS">LYNKS</option>
+                <option value="Zen">Zen</option>
+                <option value="Internal">Internal</option>
+            </select>
+            <select id="filterAssignee" onchange="renderBoard()" class="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none">
+                <option value="">All Assignees</option>
+                <option value="Nova">Nova</option>
+            </select>
+        </div>
+
+        <!-- Mobile Column Nav -->
+        <div class="md:hidden flex overflow-x-auto border-b border-zinc-800 bg-zinc-900/50">
+            <button onclick="setMobileColumn('ideas')" class="mobile-nav-btn flex-1 px-3 py-2 text-xs font-medium" data-col="ideas">💡</button>
+            <button onclick="setMobileColumn('backlog')" class="mobile-nav-btn flex-1 px-3 py-2 text-xs font-medium" data-col="backlog">📋</button>
+            <button onclick="setMobileColumn('todo')" class="mobile-nav-btn flex-1 px-3 py-2 text-xs font-medium" data-col="todo">📝</button>
+            <button onclick="setMobileColumn('progress')" class="mobile-nav-btn flex-1 px-3 py-2 text-xs font-medium" data-col="progress">🔨</button>
+            <button onclick="setMobileColumn('review')" class="mobile-nav-btn flex-1 px-3 py-2 text-xs font-medium" data-col="review">👀</button>
+            <button onclick="setMobileColumn('done')" class="mobile-nav-btn flex-1 px-3 py-2 text-xs font-medium" data-col="done">✅</button>
+        </div>
+
+        <!-- Board -->
+        <div class="flex gap-4 p-4 overflow-x-auto min-h-[calc(100vh-380px)]">
+            <!-- Ideas Column -->
+            <div class="column mobile-column flex-shrink-0 w-72 bg-zinc-900/50 rounded-xl border border-zinc-800" data-status="ideas">
+                <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">💡</span>
+                        <h3 class="font-semibold">Ideas</h3>
+                        <span class="text-xs text-zinc-500" id="count-ideas">0</span>
+                    </div>
+                    <span class="text-xs text-zinc-500" id="cost-ideas">$0</span>
+                </div>
+                <div class="p-2 space-y-2 max-h-[50vh] overflow-y-auto scrollbar-thin" id="col-ideas"></div>
+            </div>
+
+            <!-- Backlog -->
+            <div class="column mobile-column flex-shrink-0 w-72 bg-zinc-900/50 rounded-xl border border-zinc-800" data-status="backlog">
+                <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">📋</span>
+                        <h3 class="font-semibold">Backlog</h3>
+                        <span class="text-xs text-zinc-500" id="count-backlog">0</span>
+                    </div>
+                    <span class="text-xs text-zinc-500" id="cost-backlog">$0</span>
+                </div>
+                <div class="p-2 space-y-2 max-h-[50vh] overflow-y-auto scrollbar-thin" id="col-backlog"></div>
+            </div>
+
+            <!-- To Do -->
+            <div class="column mobile-column flex-shrink-0 w-72 bg-zinc-900/50 rounded-xl border border-zinc-800" data-status="todo">
+                <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">📝</span>
+                        <h3 class="font-semibold">To Do</h3>
+                        <span class="text-xs text-zinc-500" id="count-todo">0</span>
+                    </div>
+                    <span class="text-xs text-zinc-500" id="cost-todo">$0</span>
+                </div>
+                <div class="p-2 space-y-2 max-h-[50vh] overflow-y-auto scrollbar-thin" id="col-todo"></div>
+            </div>
+
+            <!-- In Progress -->
+            <div class="column mobile-column flex-shrink-0 w-72 bg-zinc-900/50 rounded-xl border border-zinc-800" data-status="progress">
+                <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">🔨</span>
+                        <h3 class="font-semibold">In Progress</h3>
+                        <span class="text-xs text-zinc-500" id="count-progress">0</span>
+                    </div>
+                    <span class="text-xs text-zinc-500" id="cost-progress">$0</span>
+                </div>
+                <div class="p-2 space-y-2 max-h-[50vh] overflow-y-auto scrollbar-thin" id="col-progress"></div>
+            </div>
+
+            <!-- Review -->
+            <div class="column mobile-column flex-shrink-0 w-72 bg-zinc-900/50 rounded-xl border border-zinc-800" data-status="review">
+                <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">👀</span>
+                        <h3 class="font-semibold">Review</h3>
+                        <span class="text-xs text-zinc-500" id="count-review">0</span>
+                    </div>
+                    <span class="text-xs text-zinc-500" id="cost-review">$0</span>
+                </div>
+                <div class="p-2 space-y-2 max-h-[50vh] overflow-y-auto scrollbar-thin" id="col-review"></div>
+            </div>
+
+            <!-- Done -->
+            <div class="column mobile-column flex-shrink-0 w-72 bg-zinc-900/50 rounded-xl border border-zinc-800" data-status="done">
+                <div class="p-3 border-b border-zinc-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">✅</span>
+                        <h3 class="font-semibold">Done</h3>
+                        <span class="text-xs text-zinc-500" id="count-done">0</span>
+                    </div>
+                    <span class="text-xs text-zinc-500" id="cost-done">$0</span>
+                </div>
+                <div class="p-2 space-y-2 max-h-[50vh] overflow-y-auto scrollbar-thin" id="col-done"></div>
+            </div>
+        </div>
+
+        <!-- Daily Reflection Panel -->
+        <div id="reflectionPanel" class="reflection-panel collapsed mx-4 mb-4 bg-zinc-900/50 rounded-xl border border-zinc-800">
+            <div class="p-3 border-b border-zinc-800 flex items-center justify-between cursor-pointer" onclick="toggleReflection()">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">📝</span>
+                    <h3 class="font-semibold">Daily Reflection</h3>
+                    <span id="reflectionDate" class="text-xs text-zinc-500"></span>
+                </div>
+                <span id="reflectionToggle" class="text-zinc-500">▼</span>
+            </div>
+            <div id="reflectionContent" class="p-4 space-y-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <button onclick="changeReflectionDay(-1)" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">←</button>
+                    <span id="reflectionDayLabel" class="text-sm text-zinc-400 flex-1 text-center"></span>
+                    <button onclick="changeReflectionDay(1)" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm">→</button>
+                </div>
+                <div>
+                    <label class="text-sm text-emerald-400 block mb-1">✨ The Good</label>
+                    <textarea id="reflectionGood" rows="2" placeholder="What went well today?" 
+                        class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-emerald-500"></textarea>
+                </div>
+                <div>
+                    <label class="text-sm text-red-400 block mb-1">💔 The Bad</label>
+                    <textarea id="reflectionBad" rows="2" placeholder="What could have gone better?" 
+                        class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-red-500"></textarea>
+                </div>
+                <div>
+                    <label class="text-sm text-amber-400 block mb-1">⭐ The Memorable</label>
+                    <textarea id="reflectionMemorable" rows="2" placeholder="What will you remember?" 
+                        class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+                <button onclick="saveReflection()" class="w-full py-2 bg-sky-500 hover:bg-sky-600 rounded-lg text-sm font-medium transition">
+                    Save Reflection
+                </button>
+            </div>
+        </div>
+
+        <!-- Completed Sidebar -->
+        <div id="sidebar" class="fixed top-0 right-0 h-full w-80 bg-zinc-900 border-l border-zinc-800 transform translate-x-full transition-transform duration-300 z-30 flex flex-col">
+            <div class="p-4 border-b border-zinc-800 flex items-center justify-between">
+                <h3 class="font-semibold">✓ Completed Tasks</h3>
+                <button onclick="toggleSidebar()" class="text-zinc-500 hover:text-white">✕</button>
+            </div>
+            <div class="p-3 border-b border-zinc-800">
+                <input type="text" id="sidebarSearch" placeholder="Search completed..." 
+                    class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none" oninput="renderSidebar()">
+                <div class="flex gap-2 mt-2">
+                    <button onclick="setSidebarSort('newest')" class="sidebar-sort-btn flex-1 px-2 py-1 bg-zinc-800 rounded text-xs" data-sort="newest">Newest</button>
+                    <button onclick="setSidebarSort('oldest')" class="sidebar-sort-btn flex-1 px-2 py-1 bg-zinc-800 rounded text-xs" data-sort="oldest">Oldest</button>
+                </div>
+            </div>
+            <div id="sidebarList" class="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-thin"></div>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div id="taskModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+        <div class="bg-zinc-900 rounded-2xl border border-zinc-800 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-4 border-b border-zinc-800 flex items-center justify-between">
+                <h3 id="modalTitle" class="font-semibold text-lg">New Task</h3>
+                <button onclick="closeModal()" class="text-zinc-500 hover:text-white">✕</button>
+            </div>
+            <form id="taskForm" class="p-4 space-y-4">
+                <input type="hidden" id="taskId">
+                <div>
+                    <label class="text-sm text-zinc-400 block mb-1">Title *</label>
+                    <input type="text" id="taskTitle" required class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-sky-500">
+                </div>
+                <div>
+                    <label class="text-sm text-zinc-400 block mb-1">Notes</label>
+                    <textarea id="taskNotes" rows="3" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-sky-500"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm text-zinc-400 block mb-1">Category</label>
+                        <select id="taskCategory" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none">
+                            <option value="Build">Build</option>
+                            <option value="LYNKS">LYNKS</option>
+                            <option value="Zen">Zen</option>
+                            <option value="Internal">Internal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm text-zinc-400 block mb-1">Assignee</label>
+                        <select id="taskAssignee" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none">
+                            <option value="Nova">Nova</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm text-zinc-400 block mb-1">Due Date</label>
+                        <input type="date" id="taskDue" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-sky-500">
+                    </div>
+                    <div>
+                        <label class="text-sm text-zinc-400 block mb-1">Est. Cost ($)</label>
+                        <input type="number" id="taskCost" step="0.01" min="0" value="0" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-sky-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-sm text-zinc-400 block mb-1">Status</label>
+                    <select id="taskStatus" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none">
+                        <option value="ideas">💡 Ideas</option>
+                        <option value="backlog">📋 Backlog</option>
+                        <option value="todo">📝 To Do</option>
+                        <option value="progress">🔨 In Progress</option>
+                        <option value="review">👀 Review</option>
+                        <option value="done">✅ Done</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2 bg-sky-500 hover:bg-sky-600 rounded-lg font-medium transition">Save</button>
+                    <button type="button" id="deleteBtn" onclick="deleteTask()" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition hidden">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+        <div class="bg-zinc-900 rounded-2xl border border-zinc-800 w-full max-w-md mx-4">
+            <div class="p-4 border-b border-zinc-800 flex items-center justify-between">
+                <h3 class="font-semibold text-lg">⚙️ Settings</h3>
+                <button onclick="closeSettings()" class="text-zinc-500 hover:text-white">✕</button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="text-sm text-zinc-400 block mb-1">Weekly Budget ($)</label>
+                    <input type="number" id="settingBudget" class="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg focus:outline-none focus:border-sky-500">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="exportData()" class="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition">📤 Export</button>
+                    <label class="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition cursor-pointer text-center">
+                        📥 Import
+                        <input type="file" accept=".json" onchange="importData(event)" class="hidden">
+                    </label>
+                </div>
+                <button onclick="resetWeek()" class="w-full py-2 bg-amber-600/20 hover:bg-amber-600/40 text-amber-400 rounded-lg text-sm transition">🔄 Reset Week Spend</button>
+                <button onclick="saveSettings()" class="w-full py-2 bg-sky-500 hover:bg-sky-600 rounded-lg font-medium transition">Save Settings</button>
+                <div class="text-xs text-zinc-500 text-center pt-2">
+                    <p>Keyboard: <kbd class="px-1 bg-zinc-800 rounded">n</kbd> new • <kbd class="px-1 bg-zinc-800 rounded">/</kbd> search • <kbd class="px-1 bg-zinc-800 rounded">esc</kbd> close</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PASS_HASH = '9098df8fdbd4ebba42142c271c180cc19f0e4625f2720091db36357e2b90aa0b';
+        
+        let state = {
+            tasks: [],
+            budget: { weekly: 150, spent: 0, weekStart: '2026-02-03' },
+            time: { today: 0, weekHours: {}, saved: 0 },
+            mood: '😊',
+            reflections: {},
+            sidebarSort: 'newest',
+            mobileColumn: 'todo'
+        };
+
+        let currentReflectionDate = new Date().toISOString().split('T')[0];
+
+        const defaultTasks = [
+            { id: '1', title: 'LYNKS Pipeline Tracker', notes: 'CRM dashboard for tracking sales pipeline', category: 'Build', assignee: 'Nova', status: 'backlog', dueDate: null, estimatedCost: 3, createdAt: '2026-01-28', completedAt: null },
+            { id: '2', title: 'Zen Booking Tracker Dashboard', notes: 'Analytics dashboard for booking data', category: 'Build', assignee: 'Nova', status: 'backlog', dueDate: null, estimatedCost: 5, createdAt: '2026-01-29', completedAt: null },
+            { id: '3', title: 'Pinterest Inspiration Boards', notes: 'Design research and mood boards for LYNKS', category: 'LYNKS', assignee: 'Nova', status: 'todo', dueDate: null, estimatedCost: 0, createdAt: '2026-01-25', completedAt: null },
+            { id: '4', title: 'Work Tracker V3 updates', notes: 'Final polish - mood, reflection, time metrics', category: 'Build', assignee: 'Nova', status: 'progress', dueDate: '2026-02-02', estimatedCost: 2, createdAt: '2026-02-02', completedAt: null },
+            { id: '5', title: 'Daily email digest of completed work', notes: 'Auto-send summary of finished tasks to Austin', category: 'Build', assignee: 'Nova', status: 'ideas', dueDate: null, estimatedCost: 2, createdAt: '2026-02-02', completedAt: null },
+            { id: '6', title: 'Todoist integration for two-way sync', notes: 'Sync tasks bidirectionally with Todoist', category: 'Build', assignee: 'Nova', status: 'ideas', dueDate: null, estimatedCost: 8, createdAt: '2026-02-02', completedAt: null }
+        ];
+
+        async function sha256(text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function attemptLogin() {
+            const input = document.getElementById('passwordInput').value;
+            const hash = await sha256(input);
+            if (hash === PASS_HASH) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                localStorage.setItem('tracker_auth', 'true');
+                init();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        function checkAuth() {
+            if (localStorage.getItem('tracker_auth') === 'true') {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                init();
+            }
+        }
+
+        function init() {
+            loadState();
+            renderBoard();
+            renderSidebar();
+            updateBudgetDisplay();
+            updateTimeMetrics();
+            updateStats();
+            setupDragDrop();
+            setMobileColumn(state.mobileColumn);
+            loadMood();
+            loadReflection();
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('tracker_state_v3');
+            if (saved) {
+                state = JSON.parse(saved);
+                if (!state.time) state.time = { today: 0, weekHours: {}, saved: 0 };
+                if (!state.mood) state.mood = '😊';
+                if (!state.reflections) state.reflections = {};
+            } else {
+                state.tasks = [...defaultTasks];
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('tracker_state_v3', JSON.stringify(state));
+        }
+
+        // Mood functions
+        function toggleMoodPicker() {
+            document.getElementById('moodPicker').classList.toggle('hidden');
+        }
+
+        function setMood(emoji) {
+            state.mood = emoji;
+            document.getElementById('currentMood').textContent = emoji;
+            document.getElementById('moodPicker').classList.add('hidden');
+            saveState();
+        }
+
+        function loadMood() {
+            document.getElementById('currentMood').textContent = state.mood;
+        }
+
+        // Time metrics
+        function updateTimeMetrics() {
+            const today = new Date().toISOString().split('T')[0];
+            const hoursToday = parseFloat(document.getElementById('hoursToday').value) || 0;
+            const timeSaved = parseFloat(document.getElementById('timeSaved').value) || 0;
+            
+            state.time.today = hoursToday;
+            state.time.weekHours[today] = hoursToday;
+            state.time.saved = timeSaved;
+            
+            // Calculate week total
+            const weekStart = new Date(state.budget.weekStart);
+            let weekTotal = 0;
+            Object.entries(state.time.weekHours).forEach(([date, hrs]) => {
+                if (new Date(date) >= weekStart) weekTotal += hrs;
+            });
+            
+            document.getElementById('hoursWeek').textContent = weekTotal.toFixed(1);
+            saveState();
+        }
+
+        function loadTimeMetrics() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('hoursToday').value = state.time.weekHours[today] || 0;
+            document.getElementById('timeSaved').value = state.time.saved || 0;
+            updateTimeMetrics();
+        }
+
+        // Reflection functions
+        function toggleReflection() {
+            const panel = document.getElementById('reflectionPanel');
+            const toggle = document.getElementById('reflectionToggle');
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                panel.classList.add('expanded');
+                toggle.textContent = '▲';
+            } else {
+                panel.classList.remove('expanded');
+                panel.classList.add('collapsed');
+                toggle.textContent = '▼';
+            }
+        }
+
+        function loadReflection() {
+            const reflection = state.reflections[currentReflectionDate] || { good: '', bad: '', memorable: '' };
+            document.getElementById('reflectionGood').value = reflection.good;
+            document.getElementById('reflectionBad').value = reflection.bad;
+            document.getElementById('reflectionMemorable').value = reflection.memorable;
+            document.getElementById('reflectionDayLabel').textContent = formatDate(currentReflectionDate);
+        }
+
+        function saveReflection() {
+            state.reflections[currentReflectionDate] = {
+                good: document.getElementById('reflectionGood').value,
+                bad: document.getElementById('reflectionBad').value,
+                memorable: document.getElementById('reflectionMemorable').value
+            };
+            saveState();
+            alert('Reflection saved!');
+        }
+
+        function changeReflectionDay(delta) {
+            const date = new Date(currentReflectionDate);
+            date.setDate(date.getDate() + delta);
+            currentReflectionDate = date.toISOString().split('T')[0];
+            loadReflection();
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            if (dateStr === today) return 'Today';
+            if (dateStr === yesterday) return 'Yesterday';
+            return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        }
+
+        // Budget display
+        function updateBudgetDisplay() {
+            const spent = parseFloat(document.getElementById('currentSpend').value) || 0;
+            state.budget.spent = spent;
+            saveState();
+
+            const remaining = state.budget.weekly - spent;
+            const percent = Math.min((spent / state.budget.weekly) * 100, 100);
+
+            document.getElementById('budgetRemaining').textContent = '$' + remaining.toFixed(2);
+            document.getElementById('budgetPercent').textContent = percent.toFixed(0) + '%';
+            document.getElementById('weekStart').textContent = state.budget.weekStart;
+
+            const bar = document.getElementById('budgetBar');
+            bar.style.width = percent + '%';
+            
+            if (percent < 50) {
+                bar.className = 'h-full transition-all duration-500 rounded-full bg-emerald-500';
+                document.getElementById('budgetRemaining').className = 'font-bold text-emerald-400';
+            } else if (percent < 80) {
+                bar.className = 'h-full transition-all duration-500 rounded-full bg-amber-500';
+                document.getElementById('budgetRemaining').className = 'font-bold text-amber-400';
+            } else {
+                bar.className = 'h-full transition-all duration-500 rounded-full bg-red-500';
+                document.getElementById('budgetRemaining').className = 'font-bold text-red-400';
+            }
+
+            document.getElementById('currentSpend').value = spent.toFixed(2);
+            document.getElementById('weeklyBudget').textContent = state.budget.weekly;
+        }
+
+        function updateStats() {
+            const weekStart = new Date(state.budget.weekStart);
+            const completedTasks = state.tasks.filter(t => t.status === 'done' && t.completedAt);
+            const thisWeek = completedTasks.filter(t => new Date(t.completedAt) >= weekStart);
+            
+            let totalDays = 0, count = 0;
+            completedTasks.forEach(t => {
+                if (t.createdAt && t.completedAt) {
+                    const days = (new Date(t.completedAt) - new Date(t.createdAt)) / (1000 * 60 * 60 * 24);
+                    totalDays += days;
+                    count++;
+                }
+            });
+
+            document.getElementById('statWeek').textContent = thisWeek.length;
+            document.getElementById('statTotal').textContent = completedTasks.length;
+            document.getElementById('statAvgDays').textContent = count > 0 ? (totalDays / count).toFixed(1) : '0';
+        }
+
+        function renderBoard() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('filterCategory').value;
+            const assignee = document.getElementById('filterAssignee').value;
+
+            const columns = ['ideas', 'backlog', 'todo', 'progress', 'review', 'done'];
+            
+            columns.forEach(col => {
+                const container = document.getElementById('col-' + col);
+                container.innerHTML = '';
+                
+                let tasks = state.tasks.filter(t => t.status === col);
+                
+                if (search) tasks = tasks.filter(t => t.title.toLowerCase().includes(search) || (t.notes && t.notes.toLowerCase().includes(search)));
+                if (category) tasks = tasks.filter(t => t.category === category);
+                if (assignee) tasks = tasks.filter(t => t.assignee === assignee);
+
+                let totalCost = 0;
+                tasks.forEach(task => {
+                    totalCost += task.estimatedCost || 0;
+                    container.appendChild(createTaskCard(task));
+                });
+
+                document.getElementById('count-' + col).textContent = tasks.length;
+                document.getElementById('cost-' + col).textContent = '$' + totalCost.toFixed(0);
+            });
+        }
+
+        function createTaskCard(task) {
+            const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'done';
+            
+            const card = document.createElement('div');
+            card.className = 'task-card bg-zinc-800 rounded-lg p-3 cursor-pointer border border-zinc-700 hover:border-zinc-600' + (isOverdue ? ' overdue' : '');
+            card.draggable = true;
+            card.dataset.id = task.id;
+            card.onclick = () => editTask(task.id);
+
+            const categoryColors = {
+                'Build': 'bg-sky-500/20 text-sky-400',
+                'LYNKS': 'bg-cyan-500/20 text-cyan-400',
+                'Zen': 'bg-emerald-500/20 text-emerald-400',
+                'Internal': 'bg-amber-500/20 text-amber-400'
+            };
+
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-2 mb-2">
+                    <h4 class="font-medium text-sm leading-tight">${task.title}</h4>
+                    ${task.estimatedCost ? `<span class="text-xs px-1.5 py-0.5 bg-zinc-700 rounded text-zinc-300 flex-shrink-0">$${task.estimatedCost}</span>` : ''}
+                </div>
+                ${task.notes ? `<p class="text-xs text-zinc-500 mb-2 line-clamp-2">${task.notes}</p>` : ''}
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs px-2 py-0.5 rounded ${categoryColors[task.category] || 'bg-zinc-700 text-zinc-400'}">${task.category}</span>
+                    <span class="text-xs text-zinc-500">${task.assignee}</span>
+                    ${task.dueDate ? `<span class="text-xs text-zinc-500">${task.dueDate}</span>` : ''}
+                    ${isOverdue ? `<span class="text-xs px-1.5 py-0.5 bg-red-500/20 text-red-400 rounded font-medium">OVERDUE</span>` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function setupDragDrop() {
+            document.querySelectorAll('.task-card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+
+            document.querySelectorAll('.column').forEach(col => {
+                col.addEventListener('dragover', handleDragOver);
+                col.addEventListener('dragleave', handleDragLeave);
+                col.addEventListener('drop', handleDrop);
+            });
+        }
+
+        let draggedId = null;
+
+        function handleDragStart(e) {
+            draggedId = e.target.dataset.id;
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const newStatus = e.currentTarget.dataset.status;
+            const task = state.tasks.find(t => t.id === draggedId);
+            
+            if (task) {
+                const wasNotDone = task.status !== 'done';
+                task.status = newStatus;
+                
+                if (newStatus === 'done' && wasNotDone) {
+                    task.completedAt = new Date().toISOString().split('T')[0];
+                } else if (newStatus !== 'done') {
+                    task.completedAt = null;
+                }
+                
+                saveState();
+                renderBoard();
+                renderSidebar();
+                updateStats();
+                setupDragDrop();
+            }
+
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function openModal() {
+            document.getElementById('taskModal').classList.remove('hidden');
+            document.getElementById('modalTitle').textContent = 'New Task';
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskId').value = '';
+            document.getElementById('taskStatus').value = 'todo';
+            document.getElementById('taskCost').value = '0';
+            document.getElementById('deleteBtn').classList.add('hidden');
+            document.getElementById('taskTitle').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+        }
+
+        function editTask(id) {
+            const task = state.tasks.find(t => t.id === id);
+            if (!task) return;
+
+            document.getElementById('taskModal').classList.remove('hidden');
+            document.getElementById('modalTitle').textContent = 'Edit Task';
+            document.getElementById('taskId').value = task.id;
+            document.getElementById('taskTitle').value = task.title;
+            document.getElementById('taskNotes').value = task.notes || '';
+            document.getElementById('taskCategory').value = task.category;
+            document.getElementById('taskAssignee').value = task.assignee;
+            document.getElementById('taskDue').value = task.dueDate || '';
+            document.getElementById('taskCost').value = task.estimatedCost || 0;
+            document.getElementById('taskStatus').value = task.status;
+            document.getElementById('deleteBtn').classList.remove('hidden');
+        }
+
+        function deleteTask() {
+            const id = document.getElementById('taskId').value;
+            if (confirm('Delete this task?')) {
+                state.tasks = state.tasks.filter(t => t.id !== id);
+                saveState();
+                closeModal();
+                renderBoard();
+                renderSidebar();
+                updateStats();
+                setupDragDrop();
+            }
+        }
+
+        document.getElementById('taskForm').onsubmit = function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('taskId').value;
+            const newStatus = document.getElementById('taskStatus').value;
+            
+            const taskData = {
+                title: document.getElementById('taskTitle').value,
+                notes: document.getElementById('taskNotes').value,
+                category: document.getElementById('taskCategory').value,
+                assignee: document.getElementById('taskAssignee').value,
+                dueDate: document.getElementById('taskDue').value || null,
+                estimatedCost: parseFloat(document.getElementById('taskCost').value) || 0,
+                status: newStatus
+            };
+
+            if (id) {
+                const task = state.tasks.find(t => t.id === id);
+                const wasNotDone = task.status !== 'done';
+                Object.assign(task, taskData);
+                if (newStatus === 'done' && wasNotDone) {
+                    task.completedAt = new Date().toISOString().split('T')[0];
+                } else if (newStatus !== 'done') {
+                    task.completedAt = null;
+                }
+            } else {
+                state.tasks.push({
+                    id: Date.now().toString(),
+                    ...taskData,
+                    createdAt: new Date().toISOString().split('T')[0],
+                    completedAt: newStatus === 'done' ? new Date().toISOString().split('T')[0] : null
+                });
+            }
+
+            saveState();
+            closeModal();
+            renderBoard();
+            renderSidebar();
+            updateStats();
+            setupDragDrop();
+        };
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('translate-x-full');
+        }
+
+        function setSidebarSort(sort) {
+            state.sidebarSort = sort;
+            document.querySelectorAll('.sidebar-sort-btn').forEach(btn => {
+                btn.classList.toggle('bg-sky-500', btn.dataset.sort === sort);
+                btn.classList.toggle('bg-zinc-800', btn.dataset.sort !== sort);
+            });
+            renderSidebar();
+        }
+
+        function renderSidebar() {
+            const search = document.getElementById('sidebarSearch').value.toLowerCase();
+            let completed = state.tasks.filter(t => t.status === 'done');
+            
+            if (search) {
+                completed = completed.filter(t => t.title.toLowerCase().includes(search) || (t.notes && t.notes.toLowerCase().includes(search)));
+            }
+
+            completed.sort((a, b) => {
+                const dateA = new Date(a.completedAt || 0);
+                const dateB = new Date(b.completedAt || 0);
+                return state.sidebarSort === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+
+            const list = document.getElementById('sidebarList');
+            list.innerHTML = completed.map(t => `
+                <div class="bg-zinc-800 rounded-lg p-3 cursor-pointer hover:bg-zinc-700 transition" onclick="editTask('${t.id}')">
+                    <h4 class="font-medium text-sm mb-1">${t.title}</h4>
+                    <div class="flex items-center gap-2 text-xs text-zinc-500">
+                        <span>${t.category}</span>
+                        ${t.completedAt ? `<span>✓ ${t.completedAt}</span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showSettings() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            document.getElementById('settingBudget').value = state.budget.weekly;
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            state.budget.weekly = parseFloat(document.getElementById('settingBudget').value) || 150;
+            saveState();
+            updateBudgetDisplay();
+            closeSettings();
+        }
+
+        function resetWeek() {
+            if (confirm('Reset weekly spend to $0?')) {
+                state.budget.spent = 0;
+                state.budget.weekStart = new Date().toISOString().split('T')[0];
+                state.time.weekHours = {};
+                saveState();
+                document.getElementById('currentSpend').value = '0';
+                updateBudgetDisplay();
+                updateTimeMetrics();
+            }
+        }
+
+        function exportData() {
+            const data = JSON.stringify(state, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'nova-tracker-backup-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    state = imported;
+                    saveState();
+                    renderBoard();
+                    renderSidebar();
+                    updateBudgetDisplay();
+                    updateTimeMetrics();
+                    updateStats();
+                    setupDragDrop();
+                    loadMood();
+                    loadReflection();
+                    alert('Data imported successfully!');
+                } catch (err) {
+                    alert('Invalid file format');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function setMobileColumn(col) {
+            state.mobileColumn = col;
+            document.querySelectorAll('.mobile-column').forEach(c => {
+                c.classList.toggle('active', c.dataset.status === col);
+            });
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.toggle('bg-sky-500', btn.dataset.col === col);
+                btn.classList.toggle('text-white', btn.dataset.col === col);
+            });
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closeSettings();
+                    e.target.blur();
+                }
+                return;
+            }
+
+            if (e.key === 'n') {
+                e.preventDefault();
+                openModal();
+            } else if (e.key === 'f' || e.key === '/') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            } else if (e.key === 'Escape') {
+                closeModal();
+                closeSettings();
+            }
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            renderBoard();
+            setupDragDrop();
+        });
+
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') attemptLogin();
+        });
+
+        document.addEventListener('click', function(e) {
+            const picker = document.getElementById('moodPicker');
+            const mood = document.getElementById('currentMood');
+            if (!picker.contains(e.target) && e.target !== mood) {
+                picker.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            document.getElementById('currentSpend').value = state.budget.spent.toFixed(2);
+            loadTimeMetrics();
+        });
+    </script>
+</body>
+</html>
