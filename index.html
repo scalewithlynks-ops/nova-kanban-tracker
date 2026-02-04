@@ -275,7 +275,7 @@
                     <div id="ideas" class="column mobile-column active rounded-lg overflow-hidden">
                         <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <h2 class="font-medium text-white text-sm">Ideas</h2>
+                                <h2 class="font-medium text-white text-sm cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnInfo('ideas')" title="Click for description">Ideas</h2>
                                 <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="ideasCount">3</span>
                             </div>
                         </div>
@@ -345,10 +345,9 @@
                     <div id="backlog" class="column mobile-column rounded-lg overflow-hidden">
                         <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <h2 class="font-medium text-white text-sm" title="Approved ideas, prioritized for development when capacity allows">Backlog</h2>
+                                <h2 class="font-medium text-white text-sm cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnInfo('backlog')" title="Click for description">Backlog</h2>
                                 <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="backlogCount">4</span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">Approved ideas, prioritized for development</p>
                         </div>
                         <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
                             
@@ -423,7 +422,7 @@
                     <div id="todo" class="column mobile-column rounded-lg overflow-hidden">
                         <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <h2 class="font-medium text-white text-sm">To Do</h2>
+                                <h2 class="font-medium text-white text-sm cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnInfo('todo')" title="Click for description">To Do</h2>
                                 <span class="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded" id="todoCount">4</span>
                             </div>
                         </div>
@@ -469,8 +468,8 @@
                                     </div>
                                     <div class="category-tag category-personal">Personal</div>
                                 </div>
-                                <h3 class="font-medium text-white mb-1 text-sm">Valentine's Day Reminder</h3>
-                                <p class="text-gray-400 text-xs mb-2">Remind Austin about Valentine's Day plans</p>
+                                <h3 class="font-medium text-white mb-1 text-sm">Valentine's Day Planning</h3>
+                                <p class="text-gray-400 text-xs mb-2">Plan special Valentine's Day for fiancé</p>
                                 <div class="flex items-center justify-between">
                                     <div class="avatar avatar-nova">N</div>
                                     <div class="token-cost">~$1 tokens</div>
@@ -500,7 +499,7 @@
                     <div id="progress" class="column mobile-column rounded-lg overflow-hidden">
                         <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <h2 class="font-medium text-white text-sm">In Progress</h2>
+                                <h2 class="font-medium text-white text-sm cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnInfo('progress')" title="Click for description">In Progress</h2>
                                 <span class="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded" id="progressCount">1</span>
                             </div>
                         </div>
@@ -529,7 +528,7 @@
                     <div id="review" class="column mobile-column rounded-lg overflow-hidden">
                         <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <h2 class="font-medium text-white text-sm">Review</h2>
+                                <h2 class="font-medium text-white text-sm cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnInfo('review')" title="Click for description">Review</h2>
                                 <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="reviewCount">0</span>
                             </div>
                         </div>
@@ -542,7 +541,7 @@
                     <div id="done" class="column mobile-column rounded-lg overflow-hidden">
                         <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <h2 class="font-medium text-white text-sm">Done</h2>
+                                <h2 class="font-medium text-white text-sm cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnInfo('done')" title="Click for description">Done</h2>
                                 <span class="text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded" id="doneCount">4</span>
                             </div>
                         </div>
@@ -942,6 +941,28 @@
         </div>
     </div>
 
+    <!-- Day Tasks Modal -->
+    <div id="dayTasksModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+        <div class="detailed-view rounded-lg w-full max-w-lg mx-4 max-h-[70vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-white" id="dayTasksTitle">Tasks for February 14, 2026</h2>
+                    <button onclick="closeDayTasks()" class="text-gray-400 hover:text-white text-xl">×</button>
+                </div>
+
+                <div class="space-y-3" id="dayTasksList">
+                    <!-- Tasks will be populated by JavaScript -->
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-700/50">
+                    <button onclick="closeDayTasks()" class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Task data with detailed information
         const taskData = {
@@ -1012,15 +1033,15 @@
                 detailedDesc: '🤖 **THE IMMEDIATE WIN:** Start with Zen, then white-label to other service businesses.\n\n**How It Would Be Built:**\n• Voice AI that answers calls 24/7 in natural conversation\n• Integrates with Vagaro for real-time booking\n• Handles inquiries, scheduling, rescheduling, payments\n• Custom personality and scripts for each business\n• Dashboard showing call analytics and conversion rates\n\n**Why It Would Be Effective:**\n• Research shows AI receptionists reduce missed calls by 90%\n• 24/7 availability captures after-hours bookings\n• Consistent quality vs human staff variations\n• Immediate cost savings (replaces part-time receptionist)\n\n**How It Elevates The Business:**\n• Zen gets immediate operational improvement and cost savings\n• Creates new revenue stream: white-label to other studios\n• Pricing: $197/mo per business (high margins)\n• Real-world proof of concept before scaling\n\n**What Makes Me Believe This:**\n• Reddit entrepreneur already making recurring revenue with white-label AI receptionist\n• Service businesses struggle with phone coverage during busy periods\n• Zen has immediate need and can validate the concept\n• Low technical complexity with high perceived value'
             },
             'valentine-reminder': {
-                title: 'Valentine\'s Day Reminder',
-                description: 'Remind Austin about Valentine\'s Day plans',
+                title: 'Valentine\'s Day Planning',
+                description: 'Plan special Valentine\'s Day for fiancé',
                 status: 'Easy',
                 category: 'Personal',
                 assignee: 'Nova',
                 priority: 'Medium',
                 tokens: '~$1 tokens',
                 currentStatus: 'To Do',
-                detailedDesc: 'Personal reminder for Austin about Valentine\'s Day on February 14th. This is an example of a true "Personal" task - non-work related items like reminders, appointments, personal errands, etc. Work tasks for clients like Sam would be categorized under the appropriate business (LYNKS).'
+                detailedDesc: 'Plan a special Valentine\'s Day for Austin\'s fiancé. Research and potentially book restaurant reservations via OpenTable, plan activities, and ensure everything is arranged well in advance. This should be memorable and thoughtful - maybe a nice dinner reservation and something personal.'
             },
             'zen-referrals': {
                 title: 'Referral Tracking System',
@@ -1181,7 +1202,7 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             '2026-02-05': ['Morning Brief Enhancement'],
             '2026-02-07': ['Blog Post Ideas Due'],
             '2026-02-10': ['Yasik Interview Prep'],
-            '2026-02-14': ['Valentine\'s Day - Personal Reminder'],
+            '2026-02-14': ['Valentine\'s Day Planning'],
             '2026-02-17': ['Dorotea/Pam Follow-up Call'],
             '2026-02-21': ['Blog Post Ideas Due'],
             '2026-02-28': ['Monthly Review']
@@ -1411,6 +1432,88 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             // Close modal
             closeTaskDetail();
         }
+        
+        // Show column information
+        function showColumnInfo(columnType) {
+            const columnDescriptions = {
+                'ideas': {
+                    title: 'Ideas Column',
+                    description: 'Creative concepts and potential projects that need evaluation. These are raw ideas that haven\'t been approved yet. You can delete ideas here with the X button if they\'re not worth pursuing.'
+                },
+                'backlog': {
+                    title: 'Backlog Column', 
+                    description: 'Approved ideas that are prioritized for development. These tasks are ready to move to "To Do" when capacity allows. They\'ve been evaluated and deemed valuable enough to work on.'
+                },
+                'todo': {
+                    title: 'To Do Column',
+                    description: 'Tasks that are ready to start immediately. These have been prioritized and are next in line for active work. Clear scope and requirements are defined.'
+                },
+                'progress': {
+                    title: 'In Progress Column',
+                    description: 'Tasks currently being worked on. Only a few items should be here at once to maintain focus. These are actively being developed or implemented.'
+                },
+                'review': {
+                    title: 'Review Column',
+                    description: 'Completed work awaiting feedback or approval. Tasks here are done but need Austin\'s review before being marked as complete.'
+                },
+                'done': {
+                    title: 'Done Column', 
+                    description: 'Completed tasks that have been approved and deployed. These represent finished work that\'s live and working as intended.'
+                }
+            };
+            
+            const info = columnDescriptions[columnType];
+            if (info) {
+                alert(`${info.title}\n\n${info.description}`);
+            }
+        }
+        
+        // Show tasks for a specific day
+        function showDayTasks(dateStr) {
+            const tasks = taskDueDates[dateStr] || [];
+            const date = new Date(dateStr);
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('dayTasksTitle').textContent = `Tasks for ${formattedDate}`;
+            
+            const tasksList = document.getElementById('dayTasksList');
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = '<p class="text-gray-400 text-center py-4">No tasks scheduled for this day</p>';
+            } else {
+                const tasksHtml = tasks.map(task => {
+                    const isPersonal = task.includes('Valentine') || task.includes('Personal');
+                    const category = isPersonal ? 'Personal' : 'Work';
+                    const categoryClass = isPersonal ? 'category-personal' : 'category-nova';
+                    
+                    return `
+                        <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700/40">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h3 class="font-medium text-white mb-1">${task}</h3>
+                                    <p class="text-gray-400 text-sm">Scheduled for ${formattedDate}</p>
+                                </div>
+                                <div class="category-tag ${categoryClass} ml-3">${category}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                tasksList.innerHTML = tasksHtml;
+            }
+            
+            document.getElementById('dayTasksModal').classList.remove('hidden');
+        }
+        
+        // Close day tasks modal
+        function closeDayTasks() {
+            document.getElementById('dayTasksModal').classList.add('hidden');
+        }
 
         // Close modal
         function closeTaskDetail() {
@@ -1587,8 +1690,10 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
                     taskMarker = `<div class="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></div>`;
                 }
                 
+                const clickHandler = hasTasks ? `onclick="showDayTasks('${dateStr}')"` : '';
+                
                 grid.innerHTML += `
-                    <div class="${cellClass}" title="${hasTasks ? hasTasks.join(', ') : ''}">
+                    <div class="${cellClass}" title="${hasTasks ? hasTasks.join(', ') : ''}" ${clickHandler}>
                         ${taskMarker}
                         <span>${day}</span>
                     </div>
@@ -1723,10 +1828,15 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             if (e.target === e.currentTarget) closeNewTaskModal();
         });
 
+        document.getElementById('dayTasksModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeDayTasks();
+        });
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeTaskDetail();
                 closeNewTaskModal();
+                closeDayTasks();
             }
             
             // Handle Enter key in comment textarea (Ctrl+Enter to add comment)
