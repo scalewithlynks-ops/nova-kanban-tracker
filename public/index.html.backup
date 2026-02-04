@@ -969,21 +969,8 @@
     </div>
 
     <script>
-        // Dynamic task data loaded from API
-        let taskData = {};
-        
-        // Load tasks from API
-        async function loadTasksFromAPI() {
-            try {
-                const response = await fetch('/api/tasks');
-                const data = await response.json();
-                taskData = data;
-                renderBoard();
-                return data;
-            } catch (error) {
-                console.error('Failed to load tasks from API:', error);
-                // Fallback to hardcoded data
-                taskData = {
+        // Task data with detailed information
+        const taskData = {
             'kanban-redesign': {
                 title: 'Kanban Board Updates',
                 description: 'Modal details, token costs, calendar view',
@@ -1177,42 +1164,7 @@
                 currentStatus: 'Done',
                 detailedDesc: 'Successfully set up and organized Todoist integration with proper project structures for Zen, LYNKS, and Personal tasks.'
             }
-                };
-                renderBoard();
-            }
-        }
-
-        // API helper functions
-        async function updateTaskStatus(taskId, newStatus) {
-            try {
-                const response = await fetch(`/api/tasks/${taskId}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ currentStatus: newStatus })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    taskData[taskId] = result.task;
-                    renderBoard();
-                }
-                return result;
-            } catch (error) {
-                console.error('Failed to update task status:', error);
-            }
-        }
-
-        async function addJournalEntryAPI(entry) {
-            try {
-                const response = await fetch('/api/journal', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ entry })
-                });
-                return await response.json();
-            } catch (error) {
-                console.error('Failed to add journal entry:', error);
-            }
-        }
+        };
 
         // Current active tab
         let currentTab = 'board';
@@ -1998,20 +1950,10 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             }
         });
 
-        // Render board with current task data
-        function renderBoard() {
-            // This function would re-render the entire kanban board
-            // For now, just refresh the page content
-            location.reload();
-        }
-
         // Initialize
         updateMood();
         setInterval(updateMood, 1800000); // Update mood every 30 minutes
         setInterval(updateBudget, 3600000); // Update budget every hour
-        
-        // Load tasks from API on page load
-        loadTasksFromAPI();
     </script>
 </body>
 </html>
