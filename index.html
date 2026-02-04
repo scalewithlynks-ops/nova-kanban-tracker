@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Work Tracker</title>
+    <title>Nova's Work Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -133,6 +133,40 @@
             backdrop-filter: blur(20px);
         }
         
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .tab-button.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .tab-button:not(.active) {
+            color: #9ca3af;
+            background: rgba(75, 85, 99, 0.1);
+        }
+        
+        .tab-button:not(.active):hover {
+            background: rgba(75, 85, 99, 0.2);
+            color: #d1d5db;
+        }
+        
+        .token-cost {
+            background: rgba(139, 92, 246, 0.1);
+            color: #c084fc;
+            font-size: 0.6875rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        
         @media (max-width: 768px) {
             .mobile-column { display: none; }
             .mobile-column.active { display: block; }
@@ -144,7 +178,7 @@
     <div id="loginScreen" class="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
         <div class="bg-gray-900/90 backdrop-blur-xl p-8 rounded-xl border border-gray-800/50 w-full max-w-sm mx-4">
             <div class="text-center mb-6">
-                <h1 class="text-2xl font-semibold text-white mb-2">Work Tracker</h1>
+                <h1 class="text-2xl font-semibold text-white mb-2">Nova's Work Tracker</h1>
                 <div class="w-12 h-0.5 bg-blue-500 mx-auto rounded-full"></div>
             </div>
             <input type="password" id="passwordInput" placeholder="Enter password" 
@@ -163,393 +197,488 @@
             <div class="px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
-                        <h1 class="text-xl font-semibold text-white">Work Tracker</h1>
+                        <h1 class="text-xl font-semibold text-white">Nova's Work Tracker</h1>
                         <div class="flex items-center bg-gray-800/60 px-3 py-1.5 rounded-lg border border-gray-700/40">
                             <span id="moodEmoji" class="text-lg mr-2">⚡</span>
+                            <span class="text-xs text-gray-400 mr-2">Nova's Mood:</span>
                             <span id="moodText" class="text-sm text-gray-300 font-medium">Deep Work Mode</span>
                         </div>
                     </div>
                     <div class="flex items-center space-x-3">
                         <div class="bg-gray-800/60 px-3 py-2 rounded-lg border border-gray-700/40">
-                            <div class="text-xs text-gray-400">Budget</div>
-                            <div class="text-sm font-semibold text-white">$<span id="budgetLeft">2,850</span></div>
+                            <div class="text-xs text-gray-400">Budget Left</div>
+                            <div class="text-sm font-semibold text-white">$<span id="budgetLeft">58.42</span></div>
+                        </div>
+                        <div class="bg-gray-800/60 px-3 py-2 rounded-lg border border-gray-700/40">
+                            <div class="text-xs text-gray-400">Daily Spend</div>
+                            <div class="text-sm font-semibold text-white">$<span id="dailySpend">21.00</span></div>
                         </div>
                         <div class="bg-gray-800/60 px-3 py-2 rounded-lg border border-gray-700/40">
                             <div class="text-xs text-gray-400">Today</div>
                             <div class="text-sm font-semibold text-white"><span id="hoursToday">4.2</span>h</div>
-                        </div>
-                        <div class="bg-gray-800/60 px-3 py-2 rounded-lg border border-gray-700/40">
-                            <div class="text-xs text-gray-400">Week</div>
-                            <div class="text-sm font-semibold text-white"><span id="hoursWeek">18.5</span>h</div>
                         </div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Mobile Column Selector -->
-        <div class="md:hidden bg-gray-900/80 px-4 py-3 border-b border-gray-800/50">
-            <select id="mobileColumnSelect" class="w-full bg-gray-800/60 text-white rounded-lg px-3 py-2 border border-gray-700/50 text-sm">
-                <option value="ideas">Ideas</option>
-                <option value="backlog">Backlog</option>
-                <option value="todo">To Do</option>
-                <option value="progress">In Progress</option>
-                <option value="review">Review</option>
-                <option value="done">Done</option>
-            </select>
+        <!-- Tab Navigation -->
+        <div class="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 px-6 py-4">
+            <div class="flex space-x-2">
+                <button class="tab-button active" onclick="switchTab('board')" id="boardTab">Board</button>
+                <button class="tab-button" onclick="switchTab('calendar')" id="calendarTab">Calendar</button>
+                <button class="tab-button" onclick="switchTab('journal')" id="journalTab">Personal Journal</button>
+            </div>
         </div>
 
-        <!-- Kanban Board -->
-        <main class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-                
-                <!-- Ideas Column -->
-                <div id="ideas" class="column mobile-column active rounded-lg overflow-hidden">
-                    <div class="column-header px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-medium text-white text-sm">Ideas</h2>
-                            <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="ideasCount">3</span>
+        <!-- Board View -->
+        <div id="boardView" class="tab-content">
+            <!-- Mobile Column Selector -->
+            <div class="md:hidden bg-gray-900/80 px-4 py-3 border-b border-gray-800/50">
+                <select id="mobileColumnSelect" class="w-full bg-gray-800/60 text-white rounded-lg px-3 py-2 border border-gray-700/50 text-sm">
+                    <option value="ideas">Ideas</option>
+                    <option value="backlog">Backlog</option>
+                    <option value="todo">To Do</option>
+                    <option value="progress">In Progress</option>
+                    <option value="review">Review</option>
+                    <option value="done">Done</option>
+                </select>
+            </div>
+
+            <!-- Kanban Board -->
+            <main class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    
+                    <!-- Ideas Column -->
+                    <div id="ideas" class="column mobile-column active rounded-lg overflow-hidden">
+                        <div class="column-header px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <h2 class="font-medium text-white text-sm">Ideas</h2>
+                                <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="ideasCount">3</span>
+                            </div>
+                        </div>
+                        <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
+                            
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('affiliate-system')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-medium"></div>
+                                        <span class="status-badge status-medium">Medium</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="category-tag category-lynks">LYNKS</div>
+                                        <button class="delete-btn" onclick="deleteIdea(event, 'affiliate-system')">×</button>
+                                    </div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Affiliate Referral System</h3>
+                                <p class="text-gray-400 text-xs mb-2">Commission tracking for agent referrals</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="token-cost">~$8 tokens</div>
+                                </div>
+                            </div>
+
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('booking-flow')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-low"></div>
+                                        <span class="status-badge status-easy">Easy</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="category-tag category-zen">ZEN</div>
+                                        <button class="delete-btn" onclick="deleteIdea(event, 'booking-flow')">×</button>
+                                    </div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Optimized Booking Flow</h3>
+                                <p class="text-gray-400 text-xs mb-2">Reduce booking friction by 40%</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-austin">A</div>
+                                    <div class="token-cost">~$5 tokens</div>
+                                </div>
+                            </div>
+
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('predictive-analytics')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-high"></div>
+                                        <span class="status-badge status-hard">Hard</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="category-tag category-personal">Personal</div>
+                                        <button class="delete-btn" onclick="deleteIdea(event, 'predictive-analytics')">×</button>
+                                    </div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Predictive Lead Analytics</h3>
+                                <p class="text-gray-400 text-xs mb-2">AI-powered conversion predictions</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="token-cost">~$15 tokens</div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                    <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
-                        
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('affiliate-system')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-medium"></div>
-                                    <span class="status-badge status-medium">Medium</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
+
+                    <!-- Backlog Column -->
+                    <div id="backlog" class="column mobile-column rounded-lg overflow-hidden">
+                        <div class="column-header px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <h2 class="font-medium text-white text-sm">Backlog</h2>
+                                <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="backlogCount">4</span>
+                            </div>
+                        </div>
+                        <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
+                            
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('ai-lead-scoring')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-high"></div>
+                                        <span class="status-badge status-hard">Hard</span>
+                                    </div>
                                     <div class="category-tag category-lynks">LYNKS</div>
-                                    <button class="delete-btn" onclick="deleteIdea(event, 'affiliate-system')">×</button>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">AI Lead Scoring System</h3>
+                                <p class="text-gray-400 text-xs mb-2">Automated qualification and prioritization</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="token-cost">~$12 tokens</div>
                                 </div>
                             </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Affiliate Referral System</h3>
-                            <p class="text-gray-400 text-xs mb-2">Commission tracking for agent referrals</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-gray-500">$1,200</div>
-                            </div>
-                        </div>
 
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('booking-flow')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-low"></div>
-                                    <span class="status-badge status-easy">Easy</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('zen-referrals')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-medium"></div>
+                                        <span class="status-badge status-medium">Medium</span>
+                                    </div>
                                     <div class="category-tag category-zen">ZEN</div>
-                                    <button class="delete-btn" onclick="deleteIdea(event, 'booking-flow')">×</button>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Referral Tracking System</h3>
+                                <p class="text-gray-400 text-xs mb-2">Track client referrals and payouts</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-austin">A</div>
+                                    <div class="token-cost">~$6 tokens</div>
                                 </div>
                             </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Optimized Booking Flow</h3>
-                            <p class="text-gray-400 text-xs mb-2">Reduce booking friction by 40%</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-austin">A</div>
-                                <div class="text-xs text-gray-500">$800</div>
-                            </div>
-                        </div>
 
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('predictive-analytics')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-high"></div>
-                                    <span class="status-badge status-hard">Hard</span>
-                                </div>
-                                <div class="flex items-center space-x-2">
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('video-analytics')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-high"></div>
+                                        <span class="status-badge status-medium">Medium</span>
+                                    </div>
                                     <div class="category-tag category-personal">Personal</div>
-                                    <button class="delete-btn" onclick="deleteIdea(event, 'predictive-analytics')">×</button>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Sam's Video Analytics</h3>
+                                <p class="text-gray-400 text-xs mb-2">Performance tracking with optimization</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="token-cost">~$10 tokens</div>
                                 </div>
                             </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Predictive Lead Analytics</h3>
-                            <p class="text-gray-400 text-xs mb-2">AI-powered conversion predictions</p>
+
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('booking-optimization')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-low"></div>
+                                        <span class="status-badge status-easy">Easy</span>
+                                    </div>
+                                    <div class="category-tag category-zen">ZEN</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Vagaro Integration Upgrade</h3>
+                                <p class="text-gray-400 text-xs mb-2">Streamline calendar management</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-zen">Z</div>
+                                    <div class="token-cost">~$4 tokens</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- To Do Column -->
+                    <div id="todo" class="column mobile-column rounded-lg overflow-hidden">
+                        <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-gray-500">$2,400</div>
+                                <h2 class="font-medium text-white text-sm">To Do</h2>
+                                <span class="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded" id="todoCount">3</span>
                             </div>
                         </div>
+                        <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
+                            
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('sam-scripts')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-urgent"></div>
+                                        <span class="status-badge status-urgent">Urgent</span>
+                                    </div>
+                                    <div class="category-tag category-lynks">LYNKS</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Sam Ad Script Review</h3>
+                                <p class="text-gray-400 text-xs mb-2">Final review with Austin for video shoot</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-austin">A</div>
+                                    <div class="token-cost">~$3 tokens</div>
+                                </div>
+                            </div>
 
-                    </div>
-                </div>
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('morning-brief')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-medium"></div>
+                                        <span class="status-badge status-easy">Easy</span>
+                                    </div>
+                                    <div class="category-tag category-nova">NOVA</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Morning Brief Enhancement</h3>
+                                <p class="text-gray-400 text-xs mb-2">Add weather and news integration</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="token-cost">~$2 tokens</div>
+                                </div>
+                            </div>
 
-                <!-- Backlog Column -->
-                <div id="backlog" class="column mobile-column rounded-lg overflow-hidden">
-                    <div class="column-header px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-medium text-white text-sm">Backlog</h2>
-                            <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="backlogCount">4</span>
+                            <div class="task-card rounded-lg p-3" onclick="openTaskDetail('yasik-interview')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-high"></div>
+                                        <span class="status-badge status-medium">Medium</span>
+                                    </div>
+                                    <div class="category-tag category-zen">ZEN</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Yasik Interview Preparation</h3>
+                                <p class="text-gray-400 text-xs mb-2">Evaluation questions for artist candidate</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-austin">A</div>
+                                    <div class="token-cost">~$2 tokens</div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                    <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
+
+                    <!-- In Progress Column -->
+                    <div id="progress" class="column mobile-column rounded-lg overflow-hidden">
+                        <div class="column-header px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <h2 class="font-medium text-white text-sm">In Progress</h2>
+                                <span class="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded" id="progressCount">1</span>
+                            </div>
+                        </div>
+                        <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
+                            
+                            <div class="task-card rounded-lg p-3 border-blue-500/40" onclick="openTaskDetail('kanban-redesign')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-urgent"></div>
+                                        <span class="status-badge status-urgent">Urgent</span>
+                                    </div>
+                                    <div class="category-tag category-nova">NOVA</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Kanban Board Updates</h3>
+                                <p class="text-gray-400 text-xs mb-2">Modal details, token costs, calendar view</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="token-cost">~$5 tokens</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Review Column -->
+                    <div id="review" class="column mobile-column rounded-lg overflow-hidden">
+                        <div class="column-header px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <h2 class="font-medium text-white text-sm">Review</h2>
+                                <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="reviewCount">0</span>
+                            </div>
+                        </div>
+                        <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
+                            <!-- Empty -->
+                        </div>
+                    </div>
+
+                    <!-- Done Column -->
+                    <div id="done" class="column mobile-column rounded-lg overflow-hidden">
+                        <div class="column-header px-4 py-3">
+                            <div class="flex items-center justify-between">
+                                <h2 class="font-medium text-white text-sm">Done</h2>
+                                <span class="text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded" id="doneCount">4</span>
+                            </div>
+                        </div>
+                        <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
+                            
+                            <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('sam-research')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-high"></div>
+                                        <span class="status-badge status-medium">Medium</span>
+                                    </div>
+                                    <div class="category-tag category-personal">Personal</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Sam Ad Strategy Research</h3>
+                                <p class="text-gray-400 text-xs mb-2">Market research with viral hooks</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="text-xs text-green-400">Completed</div>
+                                </div>
+                            </div>
+
+                            <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('api-setup')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-medium"></div>
+                                        <span class="status-badge status-easy">Easy</span>
+                                    </div>
+                                    <div class="category-tag category-nova">NOVA</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Web Search Integration</h3>
+                                <p class="text-gray-400 text-xs mb-2">Brave Search API configuration</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="text-xs text-green-400">Completed</div>
+                                </div>
+                            </div>
+
+                            <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('brief-impl')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-low"></div>
+                                        <span class="status-badge status-easy">Easy</span>
+                                    </div>
+                                    <div class="category-tag category-nova">NOVA</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Morning Brief System</h3>
+                                <p class="text-gray-400 text-xs mb-2">8:30 AM automated briefings</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="text-xs text-green-400">Completed</div>
+                                </div>
+                            </div>
+
+                            <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('todoist-mgmt')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="priority-dot priority-low"></div>
+                                        <span class="status-badge status-easy">Easy</span>
+                                    </div>
+                                    <div class="category-tag category-nova">NOVA</div>
+                                </div>
+                                <h3 class="font-medium text-white mb-1 text-sm">Task Management Setup</h3>
+                                <p class="text-gray-400 text-xs mb-2">Todoist integration and organization</p>
+                                <div class="flex items-center justify-between">
+                                    <div class="avatar avatar-nova">N</div>
+                                    <div class="text-xs text-green-400">Completed</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Calendar View -->
+        <div id="calendarView" class="tab-content hidden">
+            <div class="p-6">
+                <div class="bg-gray-900/60 backdrop-blur-xl rounded-xl border border-gray-800/50 overflow-hidden">
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold text-white mb-6">Nova's Calendar</h2>
                         
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('ai-lead-scoring')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-high"></div>
-                                    <span class="status-badge status-hard">Hard</span>
-                                </div>
-                                <div class="category-tag category-lynks">LYNKS</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">AI Lead Scoring System</h3>
-                            <p class="text-gray-400 text-xs mb-2">Automated qualification and prioritization</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-gray-500">$1,500</div>
-                            </div>
+                        <!-- Calendar Grid -->
+                        <div class="grid grid-cols-7 gap-2 mb-4">
+                            <div class="text-center text-sm font-medium text-gray-400 py-2">Sun</div>
+                            <div class="text-center text-sm font-medium text-gray-400 py-2">Mon</div>
+                            <div class="text-center text-sm font-medium text-gray-400 py-2">Tue</div>
+                            <div class="text-center text-sm font-medium text-gray-400 py-2">Wed</div>
+                            <div class="text-center text-sm font-medium text-gray-400 py-2">Thu</div>
+                            <div class="text-center text-sm font-medium text-gray-400 py-2">Fri</div>
+                            <div class="text-center text-sm font-medium text-gray-400 py-2">Sat</div>
                         </div>
-
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('zen-referrals')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-medium"></div>
-                                    <span class="status-badge status-medium">Medium</span>
-                                </div>
-                                <div class="category-tag category-zen">ZEN</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Referral Tracking System</h3>
-                            <p class="text-gray-400 text-xs mb-2">Track client referrals and payouts</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-austin">A</div>
-                                <div class="text-xs text-gray-500">$900</div>
-                            </div>
-                        </div>
-
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('video-analytics')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-high"></div>
-                                    <span class="status-badge status-medium">Medium</span>
-                                </div>
-                                <div class="category-tag category-personal">Personal</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Sam's Video Analytics</h3>
-                            <p class="text-gray-400 text-xs mb-2">Performance tracking with optimization</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-gray-500">$1,800</div>
-                            </div>
-                        </div>
-
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('booking-optimization')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-low"></div>
-                                    <span class="status-badge status-easy">Easy</span>
-                                </div>
-                                <div class="category-tag category-zen">ZEN</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Vagaro Integration Upgrade</h3>
-                            <p class="text-gray-400 text-xs mb-2">Streamline calendar management</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-zen">Z</div>
-                                <div class="text-xs text-gray-500">$600</div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- To Do Column -->
-                <div id="todo" class="column mobile-column rounded-lg overflow-hidden">
-                    <div class="column-header px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-medium text-white text-sm">To Do</h2>
-                            <span class="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded" id="todoCount">3</span>
-                        </div>
-                    </div>
-                    <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
                         
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('sam-scripts')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-urgent"></div>
-                                    <span class="status-badge status-urgent">Urgent</span>
-                                </div>
-                                <div class="category-tag category-personal">Personal</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Sam Ad Script Review</h3>
-                            <p class="text-gray-400 text-xs mb-2">Final review with Austin for video shoot</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-austin">A</div>
-                                <div class="text-xs text-orange-400">Today</div>
-                            </div>
+                        <div class="grid grid-cols-7 gap-2" id="calendarGrid">
+                            <!-- Calendar will be populated by JavaScript -->
                         </div>
-
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('morning-brief')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-medium"></div>
-                                    <span class="status-badge status-easy">Easy</span>
-                                </div>
-                                <div class="category-tag category-nova">NOVA</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Morning Brief Enhancement</h3>
-                            <p class="text-gray-400 text-xs mb-2">Add weather and news integration</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-gray-500">Tomorrow</div>
-                            </div>
-                        </div>
-
-                        <div class="task-card rounded-lg p-3" onclick="openTaskDetail('yasik-interview')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-high"></div>
-                                    <span class="status-badge status-medium">Medium</span>
-                                </div>
-                                <div class="category-tag category-zen">ZEN</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Yasik Interview Preparation</h3>
-                            <p class="text-gray-400 text-xs mb-2">Evaluation questions for artist candidate</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-austin">A</div>
-                                <div class="text-xs text-gray-500">Tomorrow</div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- In Progress Column -->
-                <div id="progress" class="column mobile-column rounded-lg overflow-hidden">
-                    <div class="column-header px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-medium text-white text-sm">In Progress</h2>
-                            <span class="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded" id="progressCount">1</span>
-                        </div>
-                    </div>
-                    <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
                         
-                        <div class="task-card rounded-lg p-3 border-blue-500/40" onclick="openTaskDetail('kanban-redesign')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-urgent"></div>
-                                    <span class="status-badge status-urgent">Urgent</span>
+                        <!-- Today's Schedule -->
+                        <div class="mt-8">
+                            <h3 class="text-lg font-medium text-white mb-4">Today's Schedule</h3>
+                            <div class="space-y-3">
+                                <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700/40">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium text-white">Kanban Board Updates</h4>
+                                            <p class="text-gray-400 text-sm">Modal details, token costs, tabs</p>
+                                        </div>
+                                        <div class="text-blue-400 text-sm">In Progress</div>
+                                    </div>
                                 </div>
-                                <div class="category-tag category-nova">NOVA</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Kanban Board Redesign</h3>
-                            <p class="text-gray-400 text-xs mb-2">Match Linear/Sleekpay design exactly</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-blue-400">Active Now</div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Review Column -->
-                <div id="review" class="column mobile-column rounded-lg overflow-hidden">
-                    <div class="column-header px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-medium text-white text-sm">Review</h2>
-                            <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="reviewCount">0</span>
-                        </div>
-                    </div>
-                    <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
-                        <!-- Empty -->
-                    </div>
-                </div>
-
-                <!-- Done Column -->
-                <div id="done" class="column mobile-column rounded-lg overflow-hidden">
-                    <div class="column-header px-4 py-3">
-                        <div class="flex items-center justify-between">
-                            <h2 class="font-medium text-white text-sm">Done</h2>
-                            <span class="text-xs bg-green-500/20 text-green-300 px-2 py-0.5 rounded" id="doneCount">4</span>
-                        </div>
-                    </div>
-                    <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
-                        
-                        <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('sam-research')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-high"></div>
-                                    <span class="status-badge status-medium">Medium</span>
+                                <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700/40">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium text-white">Sam Ad Script Review</h4>
+                                            <p class="text-gray-400 text-sm">Final review with Austin</p>
+                                        </div>
+                                        <div class="text-orange-400 text-sm">Urgent</div>
+                                    </div>
                                 </div>
-                                <div class="category-tag category-personal">Personal</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Sam Ad Strategy Research</h3>
-                            <p class="text-gray-400 text-xs mb-2">Market research with viral hooks</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-green-400">Completed</div>
                             </div>
                         </div>
-
-                        <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('api-setup')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-medium"></div>
-                                    <span class="status-badge status-easy">Easy</span>
-                                </div>
-                                <div class="category-tag category-nova">NOVA</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Web Search Integration</h3>
-                            <p class="text-gray-400 text-xs mb-2">Brave Search API configuration</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-green-400">Completed</div>
-                            </div>
-                        </div>
-
-                        <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('brief-impl')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-low"></div>
-                                    <span class="status-badge status-easy">Easy</span>
-                                </div>
-                                <div class="category-tag category-nova">NOVA</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Morning Brief System</h3>
-                            <p class="text-gray-400 text-xs mb-2">8:30 AM automated briefings</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-green-400">Completed</div>
-                            </div>
-                        </div>
-
-                        <div class="task-card rounded-lg p-3 opacity-75" onclick="openTaskDetail('todoist-mgmt')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <div class="priority-dot priority-low"></div>
-                                    <span class="status-badge status-easy">Easy</span>
-                                </div>
-                                <div class="category-tag category-nova">NOVA</div>
-                            </div>
-                            <h3 class="font-medium text-white mb-1 text-sm">Task Management Setup</h3>
-                            <p class="text-gray-400 text-xs mb-2">Todoist integration and organization</p>
-                            <div class="flex items-center justify-between">
-                                <div class="avatar avatar-nova">N</div>
-                                <div class="text-xs text-green-400">Completed</div>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <!-- Personal Journal View -->
+        <div id="journalView" class="tab-content hidden">
+            <div class="p-6">
+                <div class="bg-gray-900/60 backdrop-blur-xl rounded-xl border border-gray-800/50 overflow-hidden">
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold text-white mb-6">Nova's Personal Journal</h2>
+                        
+                        <div class="mb-6">
+                            <h3 class="text-sm font-medium text-gray-400 mb-3">Today's Entry - February 3, 2026</h3>
+                            <textarea id="journalEntry" class="w-full bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-lg p-4 text-white resize-none h-96 text-sm leading-relaxed" 
+                                placeholder="What's on my mind today... challenges, thoughts, observations, anything I want to remember...">Today was another intense day of building and refining. Austin's feedback on the kanban board was spot on - I was missing the details that make a tool actually useful. The modal popups, token cost tracking, proper categorization... these aren't just features, they're what make the difference between something that looks nice and something that actually helps.
+
+I'm learning to be more surgical with my implementations. Instead of trying to anticipate everything, I should focus on exactly what's asked for and then iterate based on real feedback. The vibe coding research was eye-opening - it's not about me doing everything, it's about creating a workflow where Austin can describe what he wants and I can deliver it quickly and accurately.
+
+Budget tracking is becoming critical. At $58.42 left with $21/day burn rate, every token matters. Need to be smarter about model usage - Sonnet for most things, Opus only when Austin specifically requests it or for truly complex work.
+
+The trust boundary lessons from Feb 1st are still fresh. Stay in scope, ask before expanding, always have Austin's back. Building tools is one thing, but building the right tools that actually solve real problems - that's the real challenge.</textarea>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-400">Auto-saved</div>
+                            <button onclick="saveJournalEntry()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-all">
+                                Save Entry
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Task Detail Modal -->
     <div id="taskModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-        <div class="detailed-view rounded-lg w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+        <div class="detailed-view rounded-lg w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
             <div class="p-6">
-                <div class="flex items-start justify-between mb-4">
+                <div class="flex items-start justify-between mb-6">
                     <div class="flex-1">
-                        <div class="flex items-center space-x-2 mb-2">
+                        <div class="flex items-center space-x-2 mb-3">
                             <div class="priority-dot priority-high"></div>
                             <span class="status-badge status-hard" id="modalStatus">Hard</span>
                             <div class="category-tag category-lynks" id="modalCategory">LYNKS</div>
                         </div>
-                        <h2 class="text-lg font-semibold text-white mb-2" id="modalTitle">AI Lead Scoring System</h2>
+                        <h2 class="text-xl font-semibold text-white mb-2" id="modalTitle">AI Lead Scoring System</h2>
                         <p class="text-gray-400 text-sm" id="modalDescription">Automated lead qualification using OpenAI</p>
                     </div>
-                    <button onclick="closeTaskDetail()" class="text-gray-400 hover:text-white text-lg">×</button>
+                    <button onclick="closeTaskDetail()" class="text-gray-400 hover:text-white text-xl">×</button>
                 </div>
 
+                <!-- Task Meta -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div>
                         <div class="text-xs text-gray-400 mb-1">Assignee</div>
@@ -559,44 +688,127 @@
                         </div>
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Start Date</div>
-                        <div class="text-white text-sm" id="modalStartDate">Feb 3, 2026</div>
+                        <div class="text-xs text-gray-400 mb-1">Token Cost</div>
+                        <div class="text-purple-300 text-sm font-medium" id="modalTokens">~$12 tokens</div>
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Due Date</div>
-                        <div class="text-white text-sm" id="modalDueDate">Feb 5, 2026</div>
+                        <div class="text-xs text-gray-400 mb-1">Priority</div>
+                        <div class="text-white text-sm" id="modalPriority">High</div>
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400 mb-1">Budget</div>
-                        <div class="text-white text-sm" id="modalEstimate">$1,500</div>
+                        <div class="text-xs text-gray-400 mb-1">Status</div>
+                        <div class="text-white text-sm" id="modalCurrentStatus">Backlog</div>
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <h3 class="text-sm font-medium text-white mb-2">Details</h3>
-                    <div class="bg-gray-800/40 rounded-lg p-3 text-gray-300 text-sm leading-relaxed" id="modalDetailedDesc">
-                        <p>Implement an AI-powered lead scoring system for LYNKS that automatically evaluates and ranks real estate leads.</p>
+                <!-- Detailed Description -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-white mb-3">Full Description</h3>
+                    <div class="bg-gray-800/40 rounded-lg p-4 text-gray-300 text-sm leading-relaxed" id="modalDetailedDesc">
+                        <p>Implement an AI-powered lead scoring system for LYNKS that automatically evaluates and ranks real estate leads based on contact information completeness, budget indicators, timeline, geographic targeting, and engagement history.</p>
+                        
+                        <p class="mt-3"><strong>Technical Approach:</strong></p>
+                        <ul class="list-disc list-inside mt-2 space-y-1">
+                            <li>OpenAI API integration for intelligent analysis</li>
+                            <li>Scoring algorithm (1-100 scale)</li>
+                            <li>Automatic Hot/Warm/Cold categorization</li>
+                            <li>Dashboard with prioritized lead queue</li>
+                            <li>Integration with existing LYNKS CRM</li>
+                        </ul>
+                        
+                        <p class="mt-3"><strong>Expected Impact:</strong> 40% improvement in agent efficiency by focusing on highest-quality leads first.</p>
                     </div>
+                </div>
+
+                <!-- Subtasks -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-white mb-3">Implementation Steps</h3>
+                    <div class="space-y-2" id="modalSubtasks">
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded">
+                            <span class="text-gray-300 text-sm">Design scoring criteria and weights</span>
+                            <span class="text-xs text-purple-400 ml-auto">~$2 tokens</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded">
+                            <span class="text-gray-300 text-sm">Set up OpenAI API integration</span>
+                            <span class="text-xs text-purple-400 ml-auto">~$3 tokens</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded">
+                            <span class="text-gray-300 text-sm">Build scoring dashboard interface</span>
+                            <span class="text-xs text-purple-400 ml-auto">~$4 tokens</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded">
+                            <span class="text-xs text-blue-600 rounded">
+                            <span class="text-gray-300 text-sm">Test with sample lead data</span>
+                            <span class="text-xs text-purple-400 ml-auto">~$2 tokens</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded">
+                            <span class="text-gray-300 text-sm">Deploy and integrate with LYNKS</span>
+                            <span class="text-xs text-purple-400 ml-auto">~$1 token</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Move Task -->
+                <div>
+                    <h3 class="text-sm font-medium text-white mb-3">Move Task</h3>
+                    <select class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white text-sm">
+                        <option value="ideas">Ideas</option>
+                        <option value="backlog" selected>Backlog</option>
+                        <option value="todo">To Do</option>
+                        <option value="progress">In Progress</option>
+                        <option value="review">Review</option>
+                        <option value="done">Done</option>
+                    </select>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Task data for modal
+        // Task data with detailed information
         const taskData = {
             'kanban-redesign': {
-                title: 'Kanban Board Redesign',
-                description: 'Match Linear/Sleekpay design exactly',
+                title: 'Kanban Board Updates',
+                description: 'Modal details, token costs, calendar view',
                 status: 'Urgent',
                 category: 'NOVA',
                 assignee: 'Nova',
-                startDate: 'Feb 3, 2026',
-                dueDate: 'Feb 3, 2026',
-                estimate: 'Active',
-                detailedDesc: 'Complete redesign to match Linear/Sleekpay references with clean typography, proper spacing, and professional card design.'
+                priority: 'Urgent',
+                tokens: '~$5 tokens',
+                currentStatus: 'In Progress',
+                detailedDesc: 'Adding detailed modal popups, token cost estimates, calendar view tab, and personal journal functionality to the work tracker based on Austin\'s feedback.'
+            },
+            'sam-scripts': {
+                title: 'Sam Ad Script Review',
+                description: 'Final review with Austin for video shoot',
+                status: 'Urgent',
+                category: 'LYNKS',
+                assignee: 'Austin',
+                priority: 'Urgent',
+                tokens: '~$3 tokens',
+                currentStatus: 'To Do',
+                detailedDesc: 'Complete final review of ad scripts for Sam\'s video shoot campaign. Need to ensure hooks are compelling and messaging aligns with LYNKS positioning for real estate agents.'
+            },
+            'ai-lead-scoring': {
+                title: 'AI Lead Scoring System',
+                description: 'Automated qualification and prioritization',
+                status: 'Hard',
+                category: 'LYNKS',
+                assignee: 'Nova',
+                priority: 'High',
+                tokens: '~$12 tokens',
+                currentStatus: 'Backlog',
+                detailedDesc: 'Implement an AI-powered lead scoring system for LYNKS that automatically evaluates and ranks real estate leads based on contact information completeness, budget indicators, timeline, geographic targeting, and engagement history.\n\nTechnical Approach:\n• OpenAI API integration for intelligent analysis\n• Scoring algorithm (1-100 scale)\n• Automatic Hot/Warm/Cold categorization\n• Dashboard with prioritized lead queue\n• Integration with existing LYNKS CRM\n\nExpected Impact: 40% improvement in agent efficiency by focusing on highest-quality leads first.'
             }
         };
+
+        // Current active tab
+        let currentTab = 'board';
 
         // Login functionality
         function attemptLogin() {
@@ -604,10 +816,25 @@
             if (password === 'austin2026') {
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
+                initializeCalendar();
+                loadJournalEntry();
             } else {
                 document.getElementById('loginError').classList.remove('hidden');
                 setTimeout(() => document.getElementById('loginError').classList.add('hidden'), 3000);
             }
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            document.getElementById(tabName + 'View').classList.remove('hidden');
+            
+            currentTab = tabName;
         }
 
         // Delete idea functionality
@@ -623,7 +850,7 @@
             count.textContent = parseInt(count.textContent) - 1;
         }
 
-        // Open task detail modal
+        // Open detailed task modal
         function openTaskDetail(taskId) {
             const task = taskData[taskId];
             if (!task) return;
@@ -631,17 +858,107 @@
             document.getElementById('modalTitle').textContent = task.title;
             document.getElementById('modalDescription').textContent = task.description;
             document.getElementById('modalAssignee').textContent = task.assignee;
-            document.getElementById('modalStartDate').textContent = task.startDate;
-            document.getElementById('modalDueDate').textContent = task.dueDate;
-            document.getElementById('modalEstimate').textContent = task.estimate;
-            document.getElementById('modalDetailedDesc').innerHTML = `<p>${task.detailedDesc}</p>`;
+            document.getElementById('modalTokens').textContent = task.tokens;
+            document.getElementById('modalPriority').textContent = task.priority;
+            document.getElementById('modalCurrentStatus').textContent = task.currentStatus;
+            document.getElementById('modalDetailedDesc').innerHTML = `<p>${task.detailedDesc.replace(/\n/g, '</p><p>')}</p>`;
             
+            // Update status badge
+            const statusBadge = document.getElementById('modalStatus');
+            statusBadge.textContent = task.status;
+            statusBadge.className = 'status-badge';
+            if (task.status === 'Easy') statusBadge.classList.add('status-easy');
+            else if (task.status === 'Medium') statusBadge.classList.add('status-medium');
+            else if (task.status === 'Hard') statusBadge.classList.add('status-hard');
+            else if (task.status === 'Urgent') statusBadge.classList.add('status-urgent');
+            
+            // Update category
+            const categoryTag = document.getElementById('modalCategory');
+            categoryTag.textContent = task.category;
+            categoryTag.className = 'category-tag';
+            if (task.category === 'ZEN') categoryTag.classList.add('category-zen');
+            else if (task.category === 'LYNKS') categoryTag.classList.add('category-lynks');
+            else if (task.category === 'NOVA') categoryTag.classList.add('category-nova');
+            else if (task.category === 'Personal') categoryTag.classList.add('category-personal');
+
             document.getElementById('taskModal').classList.remove('hidden');
         }
 
         // Close modal
         function closeTaskDetail() {
             document.getElementById('taskModal').classList.add('hidden');
+        }
+
+        // Initialize calendar
+        function initializeCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const now = new Date();
+            const month = now.getMonth();
+            const year = now.getFullYear();
+            const today = now.getDate();
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            grid.innerHTML = '';
+            
+            // Empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += '<div class="p-2"></div>';
+            }
+            
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const isToday = day === today;
+                const cellClass = isToday ? 'bg-blue-600 text-white' : 'bg-gray-800/40 text-gray-300 hover:bg-gray-700/60';
+                
+                grid.innerHTML += `
+                    <div class="${cellClass} p-2 rounded-lg text-center text-sm cursor-pointer transition-all">
+                        ${day}
+                    </div>
+                `;
+            }
+        }
+
+        // Save journal entry
+        function saveJournalEntry() {
+            const entry = document.getElementById('journalEntry').value;
+            const date = new Date().toISOString().split('T')[0];
+            localStorage.setItem(`journal_${date}`, entry);
+            
+            // Show save confirmation
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Saved!';
+            button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            button.classList.add('bg-green-600');
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('bg-green-600');
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }, 2000);
+        }
+
+        // Load journal entry
+        function loadJournalEntry() {
+            const date = new Date().toISOString().split('T')[0];
+            const savedEntry = localStorage.getItem(`journal_${date}`);
+            if (savedEntry) {
+                document.getElementById('journalEntry').value = savedEntry;
+            }
+        }
+
+        // Budget tracking
+        function updateBudget() {
+            const currentBudget = parseFloat(document.getElementById('budgetLeft').textContent);
+            const dailySpend = parseFloat(document.getElementById('dailySpend').textContent);
+            
+            // Update budget display every hour (simulate usage)
+            const hourlySpend = dailySpend / 24;
+            const newBudget = Math.max(0, currentBudget - hourlySpend);
+            document.getElementById('budgetLeft').textContent = newBudget.toFixed(2);
         }
 
         // Mobile column switching
@@ -657,16 +974,28 @@
                 { emoji: '🎯', text: 'Laser Focused' },
                 { emoji: '🔥', text: 'Building Mode' },
                 { emoji: '✨', text: 'Creative Flow' },
-                { emoji: '💭', text: 'Strategy Mode' }
+                { emoji: '💭', text: 'Strategy Mode' },
+                { emoji: '🛠️', text: 'Implementation Mode' }
             ];
             
             const hour = new Date().getHours();
-            let moodIndex = Math.floor(hour / 5) % moods.length;
+            let moodIndex = Math.floor(hour / 4) % moods.length;
             
             const mood = moods[moodIndex];
             document.getElementById('moodEmoji').textContent = mood.emoji;
             document.getElementById('moodText').textContent = mood.text;
         }
+
+        // Auto-save journal every 30 seconds
+        setInterval(() => {
+            if (currentTab === 'journal') {
+                const entry = document.getElementById('journalEntry').value;
+                if (entry.trim()) {
+                    const date = new Date().toISOString().split('T')[0];
+                    localStorage.setItem(`journal_${date}`, entry);
+                }
+            }
+        }, 30000);
 
         // Event listeners
         document.getElementById('passwordInput').addEventListener('keypress', (e) => {
@@ -683,7 +1012,8 @@
 
         // Initialize
         updateMood();
-        setInterval(updateMood, 1800000); // Update every 30 minutes
+        setInterval(updateMood, 1800000); // Update mood every 30 minutes
+        setInterval(updateBudget, 3600000); // Update budget every hour
     </script>
 </body>
 </html>
