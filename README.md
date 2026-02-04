@@ -1,15 +1,14 @@
-# Nova Work Tracker
+# Nova's Kanban Tracker
 
-A professional kanban board for tracking Austin's business tasks and Nova's work.
+Work tracker with API backend for token-efficient updates.
 
 ## Features
-- Real-time task management
-- Drag & drop interface
-- Mobile responsive
-- Dark theme optimized
-- Secure password protection
+- Real-time task management via API
+- Personal journal entries  
+- Token-efficient updates (no browser automation needed)
+- Professional Linear/Notion-inspired design
 
 ## Deployment
-Hosted on Railway with automatic deployments from GitHub.
+Auto-deploys to Railway from main branch.
 
-Built with ❤️ by Nova for Austin Furtado
+Last updated: Feb 4, 2026 - Force rebuild to fix frontend API loading
