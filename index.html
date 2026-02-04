@@ -247,9 +247,14 @@
                     <button class="tab-button" onclick="switchTab('calendar')" id="calendarTab">Calendar</button>
                     <button class="tab-button" onclick="switchTab('journal')" id="journalTab">Personal Journal</button>
                 </div>
-                <button onclick="openNewTaskModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-all">
-                    + New Task
-                </button>
+                <div class="flex space-x-2">
+                    <button onclick="exportComments()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white text-sm font-medium transition-all">
+                        📤 Export Comments for Nova
+                    </button>
+                    <button onclick="openNewTaskModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-all">
+                        + New Task
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1378,6 +1383,12 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             // Save to localStorage
             localStorage.setItem('taskComments', JSON.stringify(taskComments));
             
+            // Also display in console for Nova to see
+            console.log('NEW COMMENT ADDED:');
+            console.log(`Task: ${currentTaskId}`);
+            console.log(`Comment: ${commentText}`);
+            console.log('All comments:', JSON.stringify(taskComments, null, 2));
+            
             // Refresh comments display
             displayComments(currentTaskId);
             
@@ -1513,6 +1524,68 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
         // Close day tasks modal
         function closeDayTasks() {
             document.getElementById('dayTasksModal').classList.add('hidden');
+        }
+        
+        // Export comments for Nova to review
+        function exportComments() {
+            let exportText = "=== AUSTIN'S TASK COMMENTS FOR NOVA ===\n";
+            exportText += `Exported: ${new Date().toLocaleString()}\n\n`;
+            
+            let hasComments = false;
+            
+            for (const taskId in taskComments) {
+                const comments = taskComments[taskId];
+                if (comments && comments.length > 0) {
+                    hasComments = true;
+                    const taskTitle = taskData[taskId] ? taskData[taskId].title : taskId;
+                    exportText += `TASK: ${taskTitle}\n`;
+                    exportText += `ID: ${taskId}\n`;
+                    
+                    comments.forEach((comment, index) => {
+                        exportText += `\nComment ${index + 1}:\n`;
+                        exportText += `Author: ${comment.author}\n`;
+                        exportText += `Time: ${comment.timestamp}\n`;
+                        exportText += `Text: ${comment.text}\n`;
+                    });
+                    exportText += "\n" + "=".repeat(50) + "\n\n";
+                }
+            }
+            
+            if (!hasComments) {
+                exportText += "No comments found.\n";
+            }
+            
+            // Create a modal to show the export text
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 modal-overlay flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="detailed-view rounded-lg w-full max-w-4xl mx-4 max-h-[80vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-semibold text-white">Comments Export for Nova</h2>
+                            <button onclick="this.closest('.modal-overlay').remove()" class="text-gray-400 hover:text-white text-xl">×</button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <p class="text-gray-400 text-sm mb-2">Copy this text and send it to Nova in Telegram:</p>
+                            <textarea readonly class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg p-4 text-white text-sm font-mono h-96 resize-none" onclick="this.select()">${exportText}</textarea>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button onclick="navigator.clipboard.writeText(\`${exportText.replace(/`/g, '\\`')}\`); this.textContent='Copied!'; this.classList.add('bg-green-600')" 
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-all">
+                                📋 Copy to Clipboard
+                            </button>
+                            <button onclick="this.closest('.modal-overlay').remove()" 
+                                class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white text-sm font-medium transition-all">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
         }
 
         // Close modal
