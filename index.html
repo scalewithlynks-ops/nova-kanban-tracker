@@ -167,6 +167,23 @@
             border: 1px solid rgba(139, 92, 246, 0.3);
         }
         
+        .assignee-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        
+        .assignee-btn:hover:not(.active) {
+            background: rgba(75, 85, 99, 0.8) !important;
+            border: 1px solid rgba(75, 85, 99, 0.5);
+        }
+        
+        .assignee-btn.active {
+            background: #059669 !important;
+            color: white !important;
+            border: 1px solid #047857;
+        }
+        
         @media (max-width: 768px) {
             .mobile-column { display: none; }
             .mobile-column.active { display: block; }
@@ -224,10 +241,15 @@
 
         <!-- Tab Navigation -->
         <div class="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 px-6 py-4">
-            <div class="flex space-x-2">
-                <button class="tab-button active" onclick="switchTab('board')" id="boardTab">Board</button>
-                <button class="tab-button" onclick="switchTab('calendar')" id="calendarTab">Calendar</button>
-                <button class="tab-button" onclick="switchTab('journal')" id="journalTab">Personal Journal</button>
+            <div class="flex items-center justify-between">
+                <div class="flex space-x-2">
+                    <button class="tab-button active" onclick="switchTab('board')" id="boardTab">Board</button>
+                    <button class="tab-button" onclick="switchTab('calendar')" id="calendarTab">Calendar</button>
+                    <button class="tab-button" onclick="switchTab('journal')" id="journalTab">Personal Journal</button>
+                </div>
+                <button onclick="openNewTaskModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-all">
+                    + New Task
+                </button>
             </div>
         </div>
 
@@ -769,6 +791,112 @@ The trust boundary lessons from Feb 1st are still fresh. Stay in scope, ask befo
         </div>
     </div>
 
+    <!-- New Task Modal -->
+    <div id="newTaskModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
+        <div class="detailed-view rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-white">New task</h2>
+                    <button onclick="closeNewTaskModal()" class="text-gray-400 hover:text-white text-xl">×</button>
+                </div>
+
+                <form id="newTaskForm">
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                        <input type="text" id="taskTitle" placeholder="What needs to be done?" 
+                            class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                        <textarea id="taskDescription" placeholder="Add more details..." rows="3"
+                            class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none"></textarea>
+                    </div>
+
+                    <!-- Assignee and Priority Row -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Assignee</label>
+                            <div class="flex space-x-2">
+                                <button type="button" class="assignee-btn active flex items-center px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium" data-assignee="Austin">
+                                    Austin
+                                </button>
+                                <button type="button" class="assignee-btn flex items-center px-3 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm font-medium" data-assignee="Nova">
+                                    Nova
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Priority</label>
+                            <select id="taskPriority" class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Project and Status Row -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Project</label>
+                            <select id="taskProject" class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                <option value="zen">Zen Tattoo</option>
+                                <option value="lynks">LYNKS</option>
+                                <option value="nova">Nova</option>
+                                <option value="personal">Personal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                            <select id="taskStatus" class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                <option value="ideas">Ideas</option>
+                                <option value="backlog" selected>Backlog</option>
+                                <option value="todo">To Do</option>
+                                <option value="progress">In Progress</option>
+                                <option value="review">Review</option>
+                                <option value="done">Done</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Token Cost Estimate -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Estimated Token Cost</label>
+                        <select id="taskTokens" class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                            <option value="1">~$1-2 tokens (Quick task)</option>
+                            <option value="3" selected>~$3-5 tokens (Small task)</option>
+                            <option value="6">~$6-8 tokens (Medium task)</option>
+                            <option value="10">~$10-12 tokens (Large task)</option>
+                            <option value="15">~$15+ tokens (Complex task)</option>
+                        </select>
+                    </div>
+
+                    <!-- Output/Deliverable -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Output / Deliverable</label>
+                        <input type="text" id="taskOutput" placeholder="~/path/to/file.md or URL" 
+                            class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 mb-1">
+                        <p class="text-xs text-gray-500">File path or URL to the deliverable</p>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex space-x-3">
+                        <button type="button" onclick="closeNewTaskModal()" class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all">
+                            Create
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Task data with detailed information
         const taskData = {
@@ -889,6 +1017,129 @@ The trust boundary lessons from Feb 1st are still fresh. Stay in scope, ask befo
             document.getElementById('taskModal').classList.add('hidden');
         }
 
+        // New Task Modal Functions
+        function openNewTaskModal() {
+            document.getElementById('newTaskModal').classList.remove('hidden');
+        }
+
+        function closeNewTaskModal() {
+            document.getElementById('newTaskModal').classList.add('hidden');
+            document.getElementById('newTaskForm').reset();
+            // Reset assignee buttons
+            document.querySelectorAll('.assignee-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-green-600', 'text-white');
+                btn.classList.add('bg-gray-700', 'text-gray-300');
+            });
+            document.querySelector('[data-assignee="Austin"]').classList.add('active', 'bg-green-600', 'text-white');
+        }
+
+        // Handle assignee selection
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('assignee-btn')) {
+                // Remove active from all buttons
+                document.querySelectorAll('.assignee-btn').forEach(btn => {
+                    btn.classList.remove('active', 'bg-green-600', 'text-white');
+                    btn.classList.add('bg-gray-700', 'text-gray-300');
+                });
+                
+                // Add active to clicked button
+                e.target.classList.add('active', 'bg-green-600', 'text-white');
+                e.target.classList.remove('bg-gray-700', 'text-gray-300');
+            }
+        });
+
+        // Handle new task form submission
+        document.getElementById('newTaskForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('taskTitle').value.trim();
+            const description = document.getElementById('taskDescription').value.trim();
+            const assignee = document.querySelector('.assignee-btn.active').dataset.assignee;
+            const priority = document.getElementById('taskPriority').value;
+            const project = document.getElementById('taskProject').value;
+            const status = document.getElementById('taskStatus').value;
+            const tokens = document.getElementById('taskTokens').value;
+            const output = document.getElementById('taskOutput').value.trim();
+            
+            if (!title) {
+                alert('Please enter a task title');
+                return;
+            }
+            
+            // Create new task card
+            const taskId = 'task_' + Date.now();
+            const newTaskCard = createTaskCard(taskId, {
+                title,
+                description,
+                assignee,
+                priority,
+                project,
+                status,
+                tokens,
+                output
+            });
+            
+            // Add to appropriate column
+            const column = document.getElementById(status);
+            const taskContainer = column.querySelector('.space-y-3');
+            taskContainer.insertAdjacentHTML('afterbegin', newTaskCard);
+            
+            // Update count
+            const countElement = column.querySelector('.text-xs');
+            const currentCount = parseInt(countElement.textContent);
+            countElement.textContent = currentCount + 1;
+            
+            // Close modal
+            closeNewTaskModal();
+            
+            // Show success message briefly
+            const button = document.querySelector('[type="submit"]');
+            const originalText = button.textContent;
+            button.textContent = 'Created!';
+            button.classList.remove('bg-blue-600');
+            button.classList.add('bg-green-600');
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('bg-green-600');
+                button.classList.add('bg-blue-600');
+            }, 1500);
+        });
+
+        function createTaskCard(taskId, task) {
+            const priorityClass = `priority-${task.priority}`;
+            const categoryClass = `category-${task.project}`;
+            const statusClass = `status-${task.priority}`;
+            const avatarClass = task.assignee.toLowerCase() === 'austin' ? 'avatar-austin' : 'avatar-nova';
+            const avatarLetter = task.assignee.charAt(0).toUpperCase();
+            
+            let deleteBtn = '';
+            if (task.status === 'ideas') {
+                deleteBtn = `<button class="delete-btn" onclick="deleteIdea(event, '${taskId}')">×</button>`;
+            }
+            
+            return `
+                <div class="task-card rounded-lg p-3" onclick="openTaskDetail('${taskId}')">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="priority-dot ${priorityClass}"></div>
+                            <span class="status-badge ${statusClass}">${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="category-tag ${categoryClass}">${task.project.toUpperCase()}</div>
+                            ${deleteBtn}
+                        </div>
+                    </div>
+                    <h3 class="font-medium text-white mb-1 text-sm">${task.title}</h3>
+                    <p class="text-gray-400 text-xs mb-2">${task.description}</p>
+                    <div class="flex items-center justify-between">
+                        <div class="avatar ${avatarClass}">${avatarLetter}</div>
+                        <div class="token-cost">~$${task.tokens} tokens</div>
+                    </div>
+                </div>
+            `;
+        }
+
         // Initialize calendar
         function initializeCalendar() {
             const grid = document.getElementById('calendarGrid');
@@ -1006,8 +1257,15 @@ The trust boundary lessons from Feb 1st are still fresh. Stay in scope, ask befo
             if (e.target === e.currentTarget) closeTaskDetail();
         });
 
+        document.getElementById('newTaskModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeNewTaskModal();
+        });
+
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeTaskDetail();
+            if (e.key === 'Escape') {
+                closeTaskDetail();
+                closeNewTaskModal();
+            }
         });
 
         // Initialize
