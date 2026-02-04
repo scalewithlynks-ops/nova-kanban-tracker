@@ -345,9 +345,10 @@
                     <div id="backlog" class="column mobile-column rounded-lg overflow-hidden">
                         <div class="column-header px-4 py-3">
                             <div class="flex items-center justify-between">
-                                <h2 class="font-medium text-white text-sm">Backlog</h2>
+                                <h2 class="font-medium text-white text-sm" title="Approved ideas, prioritized for development when capacity allows">Backlog</h2>
                                 <span class="text-xs bg-gray-600/20 text-gray-400 px-2 py-0.5 rounded" id="backlogCount">4</span>
                             </div>
+                            <p class="text-xs text-gray-500 mt-1">Approved ideas, prioritized for development</p>
                         </div>
                         <div class="p-3 space-y-3 h-[500px] overflow-y-auto scrollbar-thin">
                             
@@ -794,6 +795,23 @@
                     </div>
                 </div>
 
+                <!-- Comments Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-white mb-3">Austin's Comments</h3>
+                    <div class="bg-gray-800/30 rounded-lg p-4 mb-3">
+                        <div class="space-y-3" id="modalComments">
+                            <!-- Comments will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="flex space-x-3">
+                        <textarea id="newComment" placeholder="Add a comment..." rows="2"
+                            class="flex-1 bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none text-sm"></textarea>
+                        <button onclick="addComment()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm font-medium transition-all self-end">
+                            Add
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Move Task -->
                 <div>
                     <h3 class="text-sm font-medium text-white mb-3">Move Task</h3>
@@ -1061,6 +1079,26 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             '2026-02-21': ['Blog Post Ideas Due'],
             '2026-02-28': ['Monthly Review']
         };
+        
+        // Task comments storage
+        let taskComments = {
+            'ai-lead-scoring': [
+                {
+                    author: 'Austin',
+                    text: 'Go high-level already takes care of the lead scoring in terms of high priority and urgency.',
+                    timestamp: '2026-02-03 19:46 EST'
+                }
+            ],
+            'white-label-saas': [],
+            'service-automation': [],
+            'ai-receptionist': [],
+            'kanban-redesign': [],
+            'sam-scripts': [],
+            'valentine-reminder': []
+        };
+        
+        // Current task being viewed in modal
+        let currentTaskId = null;
 
         // Login functionality
         function attemptLogin() {
@@ -1070,9 +1108,18 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
                 document.getElementById('mainApp').classList.remove('hidden');
                 initializeCalendar();
                 loadJournalEntry();
+                loadCommentsFromStorage();
             } else {
                 document.getElementById('loginError').classList.remove('hidden');
                 setTimeout(() => document.getElementById('loginError').classList.add('hidden'), 3000);
+            }
+        }
+        
+        // Load comments from localStorage
+        function loadCommentsFromStorage() {
+            const savedComments = localStorage.getItem('taskComments');
+            if (savedComments) {
+                taskComments = { ...taskComments, ...JSON.parse(savedComments) };
             }
         }
 
@@ -1107,6 +1154,8 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             const task = taskData[taskId];
             if (!task) return;
 
+            currentTaskId = taskId;
+
             document.getElementById('modalTitle').textContent = task.title;
             document.getElementById('modalDescription').textContent = task.description;
             document.getElementById('modalAssignee').textContent = task.assignee;
@@ -1133,12 +1182,90 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             else if (task.category === 'NOVA') categoryTag.classList.add('category-nova');
             else if (task.category === 'Personal') categoryTag.classList.add('category-personal');
 
+            // Load comments
+            displayComments(taskId);
+
             document.getElementById('taskModal').classList.remove('hidden');
+        }
+        
+        // Display comments for a task
+        function displayComments(taskId) {
+            const commentsContainer = document.getElementById('modalComments');
+            const comments = taskComments[taskId] || [];
+            
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = '<p class="text-gray-500 text-sm italic">No comments yet</p>';
+                return;
+            }
+            
+            const commentsHtml = comments.map(comment => `
+                <div class="bg-gray-700/50 rounded-lg p-3 border-l-4 border-blue-500/50">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-blue-400 font-medium text-sm">${comment.author}</span>
+                        <span class="text-gray-500 text-xs">${comment.timestamp}</span>
+                    </div>
+                    <p class="text-gray-300 text-sm leading-relaxed">${comment.text}</p>
+                </div>
+            `).join('');
+            
+            commentsContainer.innerHTML = commentsHtml;
+        }
+        
+        // Add new comment
+        function addComment() {
+            if (!currentTaskId) return;
+            
+            const commentText = document.getElementById('newComment').value.trim();
+            if (!commentText) return;
+            
+            // Create new comment
+            const newComment = {
+                author: 'Austin',
+                text: commentText,
+                timestamp: new Date().toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZoneName: 'short'
+                })
+            };
+            
+            // Add to comments
+            if (!taskComments[currentTaskId]) {
+                taskComments[currentTaskId] = [];
+            }
+            taskComments[currentTaskId].push(newComment);
+            
+            // Save to localStorage
+            localStorage.setItem('taskComments', JSON.stringify(taskComments));
+            
+            // Refresh comments display
+            displayComments(currentTaskId);
+            
+            // Clear input
+            document.getElementById('newComment').value = '';
+            
+            // Show success feedback
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Added!';
+            button.classList.remove('bg-blue-600');
+            button.classList.add('bg-green-600');
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('bg-green-600');
+                button.classList.add('bg-blue-600');
+            }, 1500);
         }
 
         // Close modal
         function closeTaskDetail() {
             document.getElementById('taskModal').classList.add('hidden');
+            currentTaskId = null;
+            document.getElementById('newComment').value = '';
         }
 
         // New Task Modal Functions
@@ -1449,6 +1576,11 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             if (e.key === 'Escape') {
                 closeTaskDetail();
                 closeNewTaskModal();
+            }
+            
+            // Handle Enter key in comment textarea (Ctrl+Enter to add comment)
+            if (e.key === 'Enter' && e.ctrlKey && document.getElementById('newComment') === document.activeElement) {
+                addComment();
             }
         });
 
