@@ -812,17 +812,25 @@
                     </div>
                 </div>
 
-                <!-- Move Task -->
-                <div>
-                    <h3 class="text-sm font-medium text-white mb-3">Move Task</h3>
-                    <select class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white text-sm">
-                        <option value="ideas">Ideas</option>
-                        <option value="backlog" selected>Backlog</option>
-                        <option value="todo">To Do</option>
-                        <option value="progress">In Progress</option>
-                        <option value="review">Review</option>
-                        <option value="done">Done</option>
-                    </select>
+                <!-- Actions -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="text-sm font-medium text-white mb-3">Move Task</h3>
+                        <select class="w-full bg-gray-800/50 border border-gray-700/50 rounded-lg px-3 py-2 text-white text-sm">
+                            <option value="ideas">Ideas</option>
+                            <option value="backlog" selected>Backlog</option>
+                            <option value="todo">To Do</option>
+                            <option value="progress">In Progress</option>
+                            <option value="review">Review</option>
+                            <option value="done">Done</option>
+                        </select>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-white mb-3">Delete Task</h3>
+                        <button onclick="deleteTaskFromModal()" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm font-medium transition-all">
+                            🗑️ Delete Task
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1013,6 +1021,105 @@
                 tokens: '~$1 tokens',
                 currentStatus: 'To Do',
                 detailedDesc: 'Personal reminder for Austin about Valentine\'s Day on February 14th. This is an example of a true "Personal" task - non-work related items like reminders, appointments, personal errands, etc. Work tasks for clients like Sam would be categorized under the appropriate business (LYNKS).'
+            },
+            'zen-referrals': {
+                title: 'Referral Tracking System',
+                description: 'Track client referrals and payouts',
+                status: 'Medium',
+                category: 'ZEN',
+                assignee: 'Austin',
+                priority: 'Medium',
+                tokens: '~$6 tokens',
+                currentStatus: 'Backlog',
+                detailedDesc: 'Build a system to track and manage client referrals for Zen Tattoo Studio. Track referral sources and attribution, calculate bonus payouts based on completed bookings, generate referral reports for staff, and integrate with existing booking system (Vagaro).'
+            },
+            'video-analytics': {
+                title: 'Sam\'s Video Analytics',
+                description: 'Performance tracking with optimization',
+                status: 'Medium',
+                category: 'LYNKS',
+                assignee: 'Nova',
+                priority: 'High',
+                tokens: '~$10 tokens',
+                currentStatus: 'Backlog',
+                detailedDesc: 'Create comprehensive analytics dashboard for Sam\'s video ad campaigns. Track performance metrics, provide optimization suggestions, and analyze conversion funnels. Integrate with existing LYNKS reporting to show ROI and campaign effectiveness.'
+            },
+            'booking-optimization': {
+                title: 'Vagaro Integration Upgrade',
+                description: 'Streamline calendar management',
+                status: 'Easy',
+                category: 'ZEN',
+                assignee: 'Zen',
+                priority: 'Low',
+                tokens: '~$4 tokens',
+                currentStatus: 'Backlog',
+                detailedDesc: 'Optimize the current Vagaro booking system integration to reduce friction and improve client experience. Focus on automation, better calendar sync, and streamlined payment processing.'
+            },
+            'morning-brief': {
+                title: 'Morning Brief Enhancement',
+                description: 'Add weather and news integration',
+                status: 'Easy',
+                category: 'NOVA',
+                assignee: 'Nova',
+                priority: 'Medium',
+                tokens: '~$2 tokens',
+                currentStatus: 'To Do',
+                detailedDesc: 'Enhance the existing morning brief system with weather integration and relevant business news. Provide actionable daily context to help Austin start each day informed and prepared.'
+            },
+            'yasik-interview': {
+                title: 'Yasik Interview Preparation',
+                description: 'Evaluation questions for artist candidate',
+                status: 'Medium',
+                category: 'ZEN',
+                assignee: 'Austin',
+                priority: 'High',
+                tokens: '~$2 tokens',
+                currentStatus: 'To Do',
+                detailedDesc: 'Prepare comprehensive interview questions and evaluation criteria for Yasik, the tattoo artist candidate. Focus on technical skills assessment, portfolio review, and cultural fit with Zen\'s premium brand positioning.'
+            },
+            'sam-research': {
+                title: 'Sam Ad Strategy Research',
+                description: 'Market research with viral hooks',
+                status: 'Medium',
+                category: 'LYNKS',
+                assignee: 'Nova',
+                priority: 'High',
+                tokens: 'Completed',
+                currentStatus: 'Done',
+                detailedDesc: 'Completed comprehensive market research for Sam\'s video ad campaigns, identifying viral hooks and effective messaging strategies for real estate agent targeting.'
+            },
+            'api-setup': {
+                title: 'Web Search Integration',
+                description: 'Brave Search API configuration',
+                status: 'Easy',
+                category: 'NOVA',
+                assignee: 'Nova',
+                priority: 'Medium',
+                tokens: 'Completed',
+                currentStatus: 'Done',
+                detailedDesc: 'Successfully configured Brave Search API integration to enhance Nova\'s research and information gathering capabilities.'
+            },
+            'brief-impl': {
+                title: 'Morning Brief System',
+                description: '8:30 AM automated briefings',
+                status: 'Easy',
+                category: 'NOVA',
+                assignee: 'Nova',
+                priority: 'Low',
+                tokens: 'Completed',
+                currentStatus: 'Done',
+                detailedDesc: 'Implemented automated morning briefing system that delivers daily updates at 8:30 AM with market data, weather, and priority tasks.'
+            },
+            'todoist-mgmt': {
+                title: 'Task Management Setup',
+                description: 'Todoist integration and organization',
+                status: 'Easy',
+                category: 'NOVA',
+                assignee: 'Nova',
+                priority: 'Low',
+                tokens: 'Completed',
+                currentStatus: 'Done',
+                detailedDesc: 'Successfully set up and organized Todoist integration with proper project structures for Zen, LYNKS, and Personal tasks.'
             }
         };
 
@@ -1094,7 +1201,16 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             'ai-receptionist': [],
             'kanban-redesign': [],
             'sam-scripts': [],
-            'valentine-reminder': []
+            'valentine-reminder': [],
+            'zen-referrals': [],
+            'video-analytics': [],
+            'booking-optimization': [],
+            'morning-brief': [],
+            'yasik-interview': [],
+            'sam-research': [],
+            'api-setup': [],
+            'brief-impl': [],
+            'todoist-mgmt': []
         };
         
         // Current task being viewed in modal
@@ -1259,6 +1375,41 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
                 button.classList.remove('bg-green-600');
                 button.classList.add('bg-blue-600');
             }, 1500);
+        }
+        
+        // Delete task from modal
+        function deleteTaskFromModal() {
+            if (!currentTaskId) return;
+            
+            if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+                return;
+            }
+            
+            // Find and remove the task card from DOM
+            const taskCards = document.querySelectorAll('.task-card');
+            taskCards.forEach(card => {
+                if (card.getAttribute('onclick') && card.getAttribute('onclick').includes(currentTaskId)) {
+                    const column = card.closest('.column');
+                    const countElement = column.querySelector('[id$="Count"]');
+                    const currentCount = parseInt(countElement.textContent);
+                    countElement.textContent = Math.max(0, currentCount - 1);
+                    
+                    card.style.transform = 'scale(0.95)';
+                    card.style.opacity = '0';
+                    setTimeout(() => card.remove(), 200);
+                }
+            });
+            
+            // Remove from taskData and comments
+            delete taskData[currentTaskId];
+            delete taskComments[currentTaskId];
+            
+            // Save changes
+            localStorage.setItem('deletedTasks', JSON.stringify(Object.keys(taskData)));
+            localStorage.setItem('taskComments', JSON.stringify(taskComments));
+            
+            // Close modal
+            closeTaskDetail();
         }
 
         // Close modal
