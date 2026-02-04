@@ -991,12 +991,7 @@
                 priority: 'Urgent',
                 tokens: '~$3 tokens',
                 currentStatus: 'To Do',
-                detailedDesc: 'Complete final review of ad scripts for Sam\'s video shoot campaign. Need to ensure hooks are compelling and messaging aligns with LYNKS positioning for real estate agents.',
-                subtasks: [
-                    { text: 'Review script hooks for engagement', tokens: '$1' },
-                    { text: 'Check messaging alignment with LYNKS brand', tokens: '$1' },
-                    { text: 'Finalize call-to-action language', tokens: '$1' }
-                ]
+                detailedDesc: 'Complete final review of ad scripts for Sam\'s video shoot campaign. Need to ensure hooks are compelling and messaging aligns with LYNKS positioning for real estate agents.'
             },
             'ai-lead-scoring': {
                 title: 'AI Lead Scoring System',
@@ -1007,14 +1002,7 @@
                 priority: 'High',
                 tokens: '~$12 tokens',
                 currentStatus: 'Backlog',
-                detailedDesc: 'Implement an AI-powered lead scoring system for LYNKS that automatically evaluates and ranks real estate leads based on contact information completeness, budget indicators, timeline, geographic targeting, and engagement history.\n\nTechnical Approach:\n• OpenAI API integration for intelligent analysis\n• Scoring algorithm (1-100 scale)\n• Automatic Hot/Warm/Cold categorization\n• Dashboard with prioritized lead queue\n• Integration with existing LYNKS CRM\n\nExpected Impact: 40% improvement in agent efficiency by focusing on highest-quality leads first.',
-                subtasks: [
-                    { text: 'Design scoring criteria and weights', tokens: '$2' },
-                    { text: 'Set up OpenAI API integration', tokens: '$3' },
-                    { text: 'Build scoring dashboard interface', tokens: '$4' },
-                    { text: 'Test with sample lead data', tokens: '$2' },
-                    { text: 'Deploy and integrate with LYNKS', tokens: '$1' }
-                ]
+                detailedDesc: 'Implement an AI-powered lead scoring system for LYNKS that automatically evaluates and ranks real estate leads based on contact information completeness, budget indicators, timeline, geographic targeting, and engagement history.\n\nTechnical Approach:\n• OpenAI API integration for intelligent analysis\n• Scoring algorithm (1-100 scale)\n• Automatic Hot/Warm/Cold categorization\n• Dashboard with prioritized lead queue\n• Integration with existing LYNKS CRM\n\nExpected Impact: 40% improvement in agent efficiency by focusing on highest-quality leads first.'
             },
             'white-label-saas': {
                 title: 'White Label LYNKS Platform',
@@ -1058,12 +1046,7 @@
                 priority: 'Medium',
                 tokens: '~$1 tokens',
                 currentStatus: 'To Do',
-                detailedDesc: 'Plan a special Valentine\'s Day for Austin\'s fiancé. Research and potentially book restaurant reservations via OpenTable, plan activities, and ensure everything is arranged well in advance. This should be memorable and thoughtful - maybe a nice dinner reservation and something personal.',
-                subtasks: [
-                    { text: 'Research romantic restaurants in Toronto/Oakville area', tokens: '$0.50' },
-                    { text: 'Make reservation via OpenTable for Feb 14th', tokens: '$0.25' },
-                    { text: 'Plan additional thoughtful activity or surprise', tokens: '$0.25' }
-                ]
+                detailedDesc: 'Plan a special Valentine\'s Day for Austin\'s fiancé. Research and potentially book restaurant reservations via OpenTable, plan activities, and ensure everything is arranged well in advance. This should be memorable and thoughtful - maybe a nice dinner reservation and something personal.'
             },
             'zen-referrals': {
                 title: 'Referral Tracking System',
@@ -1340,21 +1323,6 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
             else if (task.category === 'LYNKS') categoryTag.classList.add('category-lynks');
             else if (task.category === 'NOVA') categoryTag.classList.add('category-nova');
             else if (task.category === 'Personal') categoryTag.classList.add('category-personal');
-
-            // Load subtasks dynamically
-            const subtasksContainer = document.getElementById('modalSubtasks');
-            if (task.subtasks && task.subtasks.length > 0) {
-                const subtasksHtml = task.subtasks.map(subtask => `
-                    <div class="flex items-center space-x-3 p-3 bg-gray-800/30 rounded-lg">
-                        <input type="checkbox" class="w-4 h-4 text-blue-600 rounded">
-                        <span class="text-gray-300 text-sm">${subtask.text}</span>
-                        <span class="text-xs text-purple-400 ml-auto">~${subtask.tokens} tokens</span>
-                    </div>
-                `).join('');
-                subtasksContainer.innerHTML = subtasksHtml;
-            } else {
-                subtasksContainer.innerHTML = '<p class="text-gray-500 text-sm italic">No implementation steps defined yet</p>';
-            }
 
             // Load comments
             displayComments(taskId);
