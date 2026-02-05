@@ -2000,8 +2000,108 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
 
         // Render board with current task data
         function renderBoard() {
-            // Update the board without reloading - just log for now
-            console.log('Board updated with API data:', Object.keys(taskData).length, 'tasks');
+            console.log('Rendering board with API data:', Object.keys(taskData).length, 'tasks');
+            
+            // Clear all columns first
+            const columns = ['ideas', 'backlog', 'todo', 'progress', 'review', 'done'];
+            columns.forEach(col => {
+                const column = document.getElementById(col);
+                if (column) {
+                    const container = column.querySelector('.space-y-3');
+                    if (container) container.innerHTML = '';
+                }
+            });
+            
+            // Render tasks from API data
+            Object.keys(taskData).forEach(taskId => {
+                const task = taskData[taskId];
+                renderTaskCard(taskId, task);
+            });
+            
+            // Update column counts
+            updateColumnCounts();
+        }
+        
+        function renderTaskCard(taskId, task) {
+            const statusToColumn = {
+                'Ideas': 'ideas',
+                'Backlog': 'backlog', 
+                'To Do': 'todo',
+                'In Progress': 'progress',
+                'Review': 'review',
+                'Done': 'done'
+            };
+            
+            const columnId = statusToColumn[task.currentStatus] || 'ideas';
+            const column = document.getElementById(columnId);
+            if (!column) return;
+            
+            const container = column.querySelector('.space-y-3');
+            if (!container) return;
+            
+            const categoryClasses = {
+                'LYNKS': 'category-lynks',
+                'ZEN': 'category-zen', 
+                'NOVA': 'category-nova',
+                'Personal': 'category-personal'
+            };
+            
+            const statusClasses = {
+                'Easy': 'status-easy',
+                'Medium': 'status-medium',
+                'Hard': 'status-hard',
+                'Urgent': 'status-urgent'
+            };
+            
+            const cardHtml = `
+                <div class="task-card rounded-lg p-3" onclick="openTaskDetail('${taskId}')">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="priority-dot priority-${task.priority?.toLowerCase() || 'low'}"></div>
+                            <span class="status-badge ${statusClasses[task.status] || 'status-easy'}">${task.status}</span>
+                        </div>
+                        <div class="category-tag ${categoryClasses[task.category] || 'category-nova'}">${task.category}</div>
+                    </div>
+                    <h3 class="font-medium text-white mb-1 text-sm">${task.title}</h3>
+                    <p class="text-gray-400 text-xs mb-2">${task.description}</p>
+                    <div class="flex items-center justify-between">
+                        <div class="avatar avatar-${task.category?.toLowerCase() || 'nova'}">${task.assignee?.charAt(0) || 'N'}</div>
+                        <div class="token-cost">${task.tokens || '~$1 tokens'}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+        
+        function updateColumnCounts() {
+            const counts = {
+                ideas: 0, backlog: 0, todo: 0, progress: 0, review: 0, done: 0
+            };
+            
+            const statusToColumn = {
+                'Ideas': 'ideas',
+                'Backlog': 'backlog',
+                'To Do': 'todo', 
+                'In Progress': 'progress',
+                'Review': 'review',
+                'Done': 'done'
+            };
+            
+            Object.values(taskData).forEach(task => {
+                const column = statusToColumn[task.currentStatus];
+                if (column && counts.hasOwnProperty(column)) {
+                    counts[column]++;
+                }
+            });
+            
+            // Update count displays
+            Object.keys(counts).forEach(columnId => {
+                const countElement = document.getElementById(columnId + 'Count');
+                if (countElement) {
+                    countElement.textContent = counts[columnId];
+                }
+            });
         }
 
         // Initialize
