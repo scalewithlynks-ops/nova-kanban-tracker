@@ -2000,9 +2000,8 @@ Excited about the possibilities ahead. This feels like the beginning of somethin
 
         // Render board with current task data
         function renderBoard() {
-            // This function would re-render the entire kanban board
-            // For now, just refresh the page content
-            location.reload();
+            // Update the board without reloading - just log for now
+            console.log('Board updated with API data:', Object.keys(taskData).length, 'tasks');
         }
 
         // Initialize
